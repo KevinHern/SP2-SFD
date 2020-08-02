@@ -1,0 +1,17 @@
+Project SFD
+UI:
+- Login Page: 
+	* https://www.uplabs.com/posts/login-ui-kit-kit
+	* https://www.uplabs.com/posts/signin-and-signup
+- Theme:
+	* https://www.uplabs.com/posts/alumni-association
+	* https://www.uplabs.com/posts/workout-concept
+
+- Colors:
+	* https://material.io/resources/color/#!/?view.left=0&view.right=1&primary.color=3949AB&primary.text.color=ffffff
+	* Primary: #3949ab
+	* Light Version:
+	#6f74dd
+	* Dark Version:
+	#00227b
+

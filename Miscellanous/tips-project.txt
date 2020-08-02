@@ -1,0 +1,91 @@
+Interfaz y experiencia de usuario
+
+Designer vs Non-designer
+
+Interfaz de usuario vs usabilidad
+
+Audacia y humildad:
+- Audacia: Poder atreverse y el valor de hacer cosas diferentes
+- Humildad: Debemos reconocer que no lo sabemos todo
+
+---------------------
+
+Colores:
+- Red: Amor, energía, intensidad, 
+- Yellow: Joy, intellect, grabs attention
+- Green: Frescura, seguridad y crecimiento 
+- Blue: Estabilidad, confianza, serenidad
+- Morado: Feminidad, Royalty, Wealth
+
+Colores Análogos:
+- Colores que son muy similares (pueden ser oscuros, claros, etc)
+
+Colores complementario:
+- Combinación que posiblemente que no es tan llamativo
+
+Split colors:
+- Varios colores mezclados
+
+
+Herramientas:
+- https://colorhunt.co
+- https://flatuicolors.com
+- https://materialpalette.com
+
+Paleta de colores:
+- Formado por 4 colores
+- Depende del uso
+- materialdesign.io → orientado a Android
+
+Tipografía:
+- Google fonts - librería
+- Muchas fuentes no es algo bueno
+- Herramientas:
+	* https://fontpair.co
+	* https://fontjoy.com
+
+Wireframe:
+- Representación de todas las vistas
+- Herramientas:
+	* Figma (crear interfaces)
+	* Adobe XD
+	* Sketch (MAC only)
+	* marvelapp.com
+
+Inspiración:
+- Herramientas:
+	* awwwards
+	* dribbble.com
+	* behance.net
+
+-----------------------
+
+User interface (UI) vs user experience (UX:
+
+UX:
+- Interaction design
+- Wireframes & prototypes
+- information architect
+- User research
+- Scenarios
+
+UI:
+- Visual Design:
+- Colors
+- Graphic designer
+- Layouts
+- Typograghy
+
+¿Qué logramos con un UI y UX?
+- Exito en el producto
+
+¿Cómo buscar un problema?
+
+Hacer las preguntas correctas:
+- Why?
+- Who?
+- Wnere?
+- When?
+
+
+uplabs.com
