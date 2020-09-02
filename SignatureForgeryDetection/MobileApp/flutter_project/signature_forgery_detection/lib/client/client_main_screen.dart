@@ -12,10 +12,11 @@ import 'package:signature_forgery_detection/templates/container_template.dart';
 
 class MainClientScreen extends StatefulWidget {
   final bool isClient;
-  MainClientScreen({Key key, @required this.isClient}) : super(key: key);
+  final Employee employee;
+  MainClientScreen({Key key, @required this.isClient, @required this.employee}) : super(key: key);
 
   @override
-  MainClientScreenState createState() => MainClientScreenState(isClient: this.isClient);
+  MainClientScreenState createState() => MainClientScreenState(isClient: this.isClient, employee: this.employee);
 }
 
 class MainClientScreenState extends State<MainClientScreen> {
@@ -23,13 +24,14 @@ class MainClientScreenState extends State<MainClientScreen> {
   final bool isClient;
   String registerText = "", searchText = "";
   final int _iconColor = 0xff3949AB;
+  final Employee employee;
 
   @override
   void initState(){
     super.initState();
   }
 
-  MainClientScreenState({@required this.isClient}) : this._pageIndex = 1, this._navIndex = 1, registerText = (isClient)? "Register Client" : "Register Employee",
+  MainClientScreenState({@required this.isClient, @required this.employee}) : this._pageIndex = 1, this._navIndex = 1, registerText = (isClient)? "Register Client" : "Register Employee",
         searchText = (isClient)? "Search Client" : "Search Employee";
 
   Widget _buildDefaultTile(IconData iconData, String text, int pindex){
@@ -74,11 +76,11 @@ class MainClientScreenState extends State<MainClientScreen> {
   Widget returnScreen() {
     switch(this._pageIndex) {
       case 0:
-        return new RegisterClient();
+        return new RegisterClient(issuer: this.employee.getParameterByString("name") + " " + this.employee.getParameterByString("lname"),);
       case 1:
         return defaultScreen();
       case 2:
-        return new SearchPeople();
+        return new SearchPeople(issuer: this.employee.getParameterByString("name") + " " + this.employee.getParameterByString("lname"), issuerPowers: this.employee.getPowers(),);
       default:
         throw new NullThrownError();
     }

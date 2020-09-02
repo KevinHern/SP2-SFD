@@ -3,15 +3,18 @@ class Client{
   String _uid;
   var _information = [];
   //_name, _lastName, _email, _phoneNumber;
-  DateTime _registrationDate, _birthday;
 
   Client(String name, String lastName, String email, String phoneNumber,
-      DateTime registrationDate, DateTime birthday){
-    this._information = [email, name, lastName, phoneNumber, registrationDate, birthday];
+      String registrationDate, String birthday){
+    this._information = [email, name, lastName, phoneNumber, birthday, registrationDate];
   }
 
   String getUID(){
     return this._uid;
+  }
+
+  void setUID(String uid){
+    this._uid = uid;
   }
 
   int mapParamStringToInt(String parameter) {
@@ -41,7 +44,7 @@ class Client{
     return index;
   }
 
-  Object getParameterByString(String parameter){
+  String getParameterByString(String parameter){
     int index = mapParamStringToInt(parameter);
     return (index == -1)? null : this._information[index];
   }
@@ -49,7 +52,7 @@ class Client{
   String getParameterByInt(int option) { return this._information[option]; }
 
   List getInformation() { return this._information; }
-  int getTotalRealParameters() { return 5;} // Email, Password, Name + LastName + phone
+  int getTotalRealParameters() { return 4;} // Email, Name + LastName, phone, birthday
 
   void updateByString(String parameter, var value){
     int index = mapParamStringToInt(parameter);

@@ -1,25 +1,31 @@
 // Basic Imports
 import 'package:flutter/material.dart';
 
+// Models
+import 'package:signature_forgery_detection/models/employee.dart';
+
 // Templates
 import 'package:signature_forgery_detection/templates/container_template.dart';
+import 'package:signature_forgery_detection/templates/stream_template.dart';
 
 // Routes
 import 'package:signature_forgery_detection/employee/employee_information.dart';
 
-class SearchPeople extends StatefulWidget{
+// Backend
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-  SearchPeopleState createState() => SearchPeopleState();
+class SearchPeople extends StatefulWidget{
+  final String issuer;
+  SearchPeople({Key key, @required this.issuer});
+  SearchPeopleState createState() => SearchPeopleState(issuer: this.issuer);
 }
 
 class SearchPeopleState extends State<SearchPeople> {
-
+  final String issuer;
   final TextEditingController _searchBarControler = new TextEditingController();
   final int _iconColor = 0xff3949AB;
 
-  Widget _buildFilter() {
-    return null;//FormTemplate.buildDropDown(items, displaying);
-  }
+  SearchPeopleState({Key key, @required this.issuer});
 
   Widget _buildSearchBar(){
     return new Container(
@@ -80,15 +86,25 @@ class SearchPeopleState extends State<SearchPeople> {
     );
   }
 
-  Widget _buildPersonTile(String name, String uid){
+  Widget _buildPersonTile(DocumentSnapshot snapshot){
+    Employee employee = new Employee(
+      snapshot.get("name"), snapshot.get("lname"),
+      snapshot.get("email"),
+      snapshot.get("phone"), snapshot.get("birthday"),
+      snapshot.get("department"), snapshot.get("position"),
+      snapshot.get("init"), snapshot.get("end"),
+    );
+    employee.setPowers(snapshot.get("powers"));
+    employee.setUID(snapshot.id);
+
     return ContainerTemplate.buildContainer(
       new ListTile(
         leading: new Padding(padding: EdgeInsets.only(left: 0,), child: new Icon(Icons.person_pin, size: 40, color: new Color(this._iconColor).withOpacity(0.9),),),
         title: new Wrap(
-          children: <Widget>[new Text(name, style: new TextStyle(fontSize: 20), textAlign: TextAlign.left,)],
+          children: <Widget>[new Text(employee.getParameterByString("name") + " " + employee.getParameterByString("lname"), style: new TextStyle(fontSize: 20), textAlign: TextAlign.left,)],
         ),
         onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => EmployeeInfoScreen(uid: uid)));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => EmployeeInfoScreen(employee: employee, issuer: this.issuer,)));
         },
       ),
       [10,10,10,10],
@@ -110,11 +126,11 @@ class SearchPeopleState extends State<SearchPeople> {
       width: double.infinity,
       height: 500,
       // REPLACE THIS LISTVIEW WITH LISTVIEW BUILDER WHEN IMPLEMENTING BACKEND
-      child: new ListView(
-        children: <Widget>[
-          this._buildPersonTile("Dummy Dummy Bolonguis Tulilis", "1"),
-          this._buildPersonTile("Tulio Jose Triviño Zúñiga", "2"),
-        ],
+      child: (new StreamTemplate()).buildStreamWithContext(
+          false,
+          "No matches where found",
+          (_searchBarControler.text.isNotEmpty)? FirebaseFirestore.instance.collection("employees").where('name', isGreaterThanOrEqualTo: _searchBarControler.text).snapshots() : FirebaseFirestore.instance.collection("employees").snapshots(),
+              (context, doc) => _buildPersonTile(doc)
       ),
     );
   }

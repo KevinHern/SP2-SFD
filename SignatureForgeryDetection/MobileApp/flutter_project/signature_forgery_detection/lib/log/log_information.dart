@@ -70,7 +70,12 @@ class LogInfoState extends State<LogInfo> {
           constraints: new BoxConstraints(
             minHeight: 200
           ),
-          child: new Text(this.log.getFieldByString("description"), style: new TextStyle(fontSize: 18),),
+          child: new Text(
+            "Issue Date: " + this.log.getDate()
+            + "\n\nDescription: " + (this.log.getFieldByString("who") as String) + " " + (this.log.getFieldByString("description") as String) + " " + (this.log.getFieldByString("victim") as String)
+            + "\n\nReason: " + (this.log.getFieldByString("reason") as String),
+            style: new TextStyle(fontSize: 18),
+          ),
         ),
       ),
       [0,0,0,0], 20,
@@ -80,10 +85,9 @@ class LogInfoState extends State<LogInfo> {
 
   Future _applyAction(String text, int action) async{
     DialogTemplate.initLoader(context, text);
-    int code = await (new QueryLog()).applyActionOnLog(this.log, action);
+    int code = await (new QueryLog()).doLogAction(this.log, action);
     DialogTemplate.terminateLoader();
     setState((){});
-    DialogTemplate.showStatusUpdate(context, code);
     return code;
   }
 
@@ -95,8 +99,13 @@ class LogInfoState extends State<LogInfo> {
         children: <Widget>[
           ButtonTemplate.buildBasicButton(
             () async {
-              int code = await this._applyAction("Approving action...", 0);
-              DialogTemplate.showStatusUpdate(context, code);
+              int code = await this._applyAction("Approving action...", 1);
+              if(code == 1) {
+                DialogTemplate.showLogConfirmationMessage(context, "You have approved the request");
+              }
+              else {
+                DialogTemplate.showMessage(context, "An error has occurred, try again");
+              }
             },
             0xFF18BD28,
             "Approve",
@@ -104,8 +113,13 @@ class LogInfoState extends State<LogInfo> {
           ),
           ButtonTemplate.buildBasicButton(
             () async {
-              int code = await this._applyAction("Denying action...", 1);
-              DialogTemplate.showStatusUpdate(context, code);
+              int code = await this._applyAction("Denying action...", 0);
+              if(code == 1) {
+                DialogTemplate.showLogConfirmationMessage(context, "You have denied the request.");
+              }
+              else {
+                DialogTemplate.showMessage(context, "An error has occurred, try again");
+              }
             },
             0xFFC30000,
             "Deny",
@@ -132,7 +146,7 @@ class LogInfoState extends State<LogInfo> {
       children: <Widget>[
         this._buildTitle(),
         new Padding(padding: new EdgeInsets.only(top: 20, bottom: 20), child: this._buildBody(),),
-        this._buildButtons(this.log.getFieldByString("type") == LogType.REPORT),
+        this._buildButtons(this.log.getFieldByString("type") == 1 && this.log.getFieldByString("status") == 1),
       ],
     );
   }

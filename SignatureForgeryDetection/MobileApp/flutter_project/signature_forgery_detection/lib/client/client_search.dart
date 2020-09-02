@@ -1,5 +1,6 @@
 // Basic Imports
 import 'package:flutter/material.dart';
+import 'package:signature_forgery_detection/models/client.dart';
 
 // Templates
 import 'package:signature_forgery_detection/templates/container_template.dart';
@@ -7,15 +8,25 @@ import 'package:signature_forgery_detection/templates/container_template.dart';
 // Routes
 import 'package:signature_forgery_detection/client/client_information.dart';
 
-class SearchPeople extends StatefulWidget{
+// Backend
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:signature_forgery_detection/templates/stream_template.dart';
 
-  SearchPeopleState createState() => SearchPeopleState();
+class SearchPeople extends StatefulWidget{
+  final String issuer;
+  final bool issuerPowers;
+  SearchPeople({Key key, @required this.issuer, @required this.issuerPowers});
+  SearchPeopleState createState() => SearchPeopleState(issuer: this.issuer);
 }
 
 class SearchPeopleState extends State<SearchPeople> {
-
+  final String issuer;
+  final bool issuerPowers;
   final TextEditingController _searchBarControler = new TextEditingController();
   final int _iconColor = 0xff3949AB;
+  var people = [];
+
+  SearchPeopleState({Key key, @required this.issuer, @required this.issuerPowers});
 
   Widget _buildFilter() {
     return null;//FormTemplate.buildDropDown(items, displaying);
@@ -64,7 +75,11 @@ class SearchPeopleState extends State<SearchPeople> {
           borderRadius: BorderRadius.circular(30.0),
         ),
         //padding: new EdgeInsets.only(left: 20, right: 20),
-        onPressed: () {},
+        onPressed: () {
+          setState(() {
+
+          });
+        },
         color: new Color(0xFF002FD3),
         textColor: Colors.white,
         child: Text("Search",
@@ -80,15 +95,26 @@ class SearchPeopleState extends State<SearchPeople> {
     );
   }
 
-  Widget _buildPersonTile(String name, String uid){
+  Widget _buildPersonTile(DocumentSnapshot snapshot){
+    Client client = new Client(
+        snapshot.get('name'),
+        snapshot.get('lname'),
+        snapshot.get('email'),
+        snapshot.get('phone'),
+        snapshot.get('registration'),
+        snapshot.get('birthday')
+    );
+
+    client.setUID(snapshot.id);
+
     return ContainerTemplate.buildContainer(
       new ListTile(
         leading: new Padding(padding: EdgeInsets.only(left: 0,), child: new Icon(Icons.person_pin, size: 40, color: new Color(this._iconColor).withOpacity(0.9),),),
         title: new Wrap(
-          children: <Widget>[new Text(name, style: new TextStyle(fontSize: 20), textAlign: TextAlign.left,)],
+          children: <Widget>[new Text(client.getParameterByString("name") + " " + client.getParameterByString("lname"), style: new TextStyle(fontSize: 20), textAlign: TextAlign.left,)],
         ),
         onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => ClientInfoScreen(uid: uid)));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => ClientInfoScreen(client: client, issuer: this.issuer, issuerPowers: this.issuerPowers,)));
         },
       ),
       [10,10,10,10],
@@ -110,11 +136,11 @@ class SearchPeopleState extends State<SearchPeople> {
       width: double.infinity,
       height: 500,
       // REPLACE THIS LISTVIEW WITH LISTVIEW BUILDER WHEN IMPLEMENTING BACKEND
-      child: new ListView(
-        children: <Widget>[
-          this._buildPersonTile("Dummy Dummy Bolonguis Tulilis", "1"),
-          this._buildPersonTile("Tulio Jose Triviño Zúñiga", "2"),
-        ],
+      child: (new StreamTemplate()).buildStreamWithContext(
+          false,
+          "No matches where found",
+          (!_searchBarControler.text.isEmpty)? FirebaseFirestore.instance.collection("clients").where('name', isGreaterThanOrEqualTo: _searchBarControler.text).snapshots() : FirebaseFirestore.instance.collection("clients").snapshots(),
+              (context, doc) => _buildPersonTile(doc)
       ),
     );
   }

@@ -11,25 +11,28 @@ import 'package:signature_forgery_detection/templates/dialog_template.dart';
 
 // Database
 import 'package:signature_forgery_detection/backend/employee_query.dart';
+import 'package:signature_forgery_detection/backend/log_query.dart';
 
 class EmployeeEditScreen extends StatelessWidget {
   final Employee employee;
   final int option;
-  EmployeeEditScreen({Key key, @required this.employee, @required this.option});
+  final String issuer;
+  EmployeeEditScreen({Key key, @required this.employee, @required this.option, @required this.issuer});
 
   @override
   Widget build(BuildContext context) {
     print("Option at ProfileEditScreen: "+ this.option.toString());
-    return ProfileEdit(employee: this.employee, option: this.option,);
+    return ProfileEdit(employee: this.employee, option: this.option, issuer: this.issuer,);
   }
 }
 
 class ProfileEdit extends StatefulWidget {
   final Employee employee;
   final int option;
-  ProfileEdit({Key key, @required this.employee, @required this.option});
+  final String issuer;
+  ProfileEdit({Key key, @required this.employee, @required this.option, @required this.issuer});
 
-  ProfileEditState createState() => ProfileEditState(employee: this.employee, option: this.option);
+  ProfileEditState createState() => ProfileEditState(employee: this.employee, option: this.option, issuer: this.issuer);
 }
 
 class ProfileEditState extends State<ProfileEdit> {
@@ -38,11 +41,13 @@ class ProfileEditState extends State<ProfileEdit> {
   final int _iconLabelColor = 0xff6F74DD;
   final int _borderColor = 0xff856fdd;
   final int _borderoFocusColor = 0xff5436cf;
+  final String issuer;
 
-  ProfileEditState({Key key, @required this.employee, @required this.option});
+  ProfileEditState({Key key, @required this.employee, @required this.option, @required this.issuer});
 
   final _formkey = GlobalKey<FormState>();
   TextEditingController _fieldController1;
+  TextEditingController _fieldController2;
   String _title;
   var newValues = [];
 
@@ -52,19 +57,24 @@ class ProfileEditState extends State<ProfileEdit> {
     switch(this.option) {
       case 0:
         _fieldController1 = new TextEditingController(text: this.employee.getParameterByString("dept"));
-        _title = "Department";
+        _title = "Update Department";
         break;
       case 1:
         _fieldController1 = new TextEditingController(text: this.employee.getParameterByString("position"));
-        _title = "Position";
+        _title = "Update Position";
         break;
       case 2:
         _fieldController1 = new TextEditingController(text: this.employee.getParameterByString("init"));
-        _title = "Start Schedule";
+        _fieldController2 = new TextEditingController(text: this.employee.getParameterByString("end"));
+        _title = "Update Schedule";
         break;
       case 3:
-        _fieldController1 = new TextEditingController(text: this.employee.getParameterByString("end"));
-        _title = "End Schedule";
+        _fieldController1 = new TextEditingController();
+        _title = "Update Reason";
+        break;
+      case 4:
+        _fieldController1 = new TextEditingController();
+        _title = "Deletion Request";
         break;
       default:
         throw new NullThrownError();
@@ -92,18 +102,27 @@ class ProfileEditState extends State<ProfileEdit> {
         break;
       case 2:
         widgetToShow =
-            FormTemplate.buildSingleTextInput(
-                this._fieldController1, "Start Schedule", Icons.schedule,
-                this._iconLabelColor, this._borderColor, this._borderoFocusColor,
-                false, true
+            new Column(
+              children: <Widget>[
+                FormTemplate.buildTimeInput(
+                    this._fieldController1, "Schedule (Init)",
+                    Icons.schedule,
+                    this._iconLabelColor, this._borderColor, this._borderoFocusColor, "sc1", context
+                ),
+                FormTemplate.buildTimeInput(
+                    this._fieldController2, "Schedule (End)",
+                    Icons.schedule,
+                    this._iconLabelColor, this._borderColor, this._borderoFocusColor, "sc2", context
+                ),
+              ],
             );
         break;
       case 3:
+      case 4:
         widgetToShow =
-            FormTemplate.buildSingleTextInput(
-                this._fieldController1, "End Schedule", Icons.schedule,
+            FormTemplate.buildMultiTextInput(
+                this._fieldController1, "Reason", Icons.bookmark,
                 this._iconLabelColor, this._borderColor, this._borderoFocusColor,
-                false, true
             );
         break;
       default:
@@ -115,6 +134,7 @@ class ProfileEditState extends State<ProfileEdit> {
   void getNewValue() {
     newValues = [];
     newValues.add(_fieldController1.text);
+    if (this.option == 2) newValues.add(_fieldController2.text);
   }
 
   Widget _buildSubmitBtn() {
@@ -123,7 +143,7 @@ class ProfileEditState extends State<ProfileEdit> {
       child: SizedBox(
         width: double.infinity,
         child: new RaisedButton(
-          child: new Text("Update Info"),
+          child: new Text("Submit"),
           textColor: new Color(0xFFFFFFFF),
           color: new Color(0xFF0634AA),
           splashColor: new Color(0xFF001f6e),
@@ -132,11 +152,27 @@ class ProfileEditState extends State<ProfileEdit> {
               getNewValue();
 
               DialogTemplate.initLoader(context, "Updating...");
-              int code = await (new QueryEmployee()).updateEmployeeField(this.employee, this.option, this.newValues);
-              DialogTemplate.terminateLoader();
-              setState((){});
+              int code = (this.option != 4)? await (new QueryEmployee()).updateEmployeeField(this.employee, this.option, this.newValues) : 0;
 
-              DialogTemplate.showStatusUpdate(context, code);
+              String employeeName = this.employee.getParameterByString("name") + " " + this.employee.getParameterByString("lname");
+              String description = (this.option == 4)? " requesting deletion on employee " : " updated (EMPLOYEE) " + employeeName + "'s information.";
+
+              int logCode = await (new QueryLog()).pushLog(
+                  (this.option == 4)? 1 : 0, description,
+                  this.issuer,
+                  (this.option == 4)? employeeName : "",
+                  this.employee.getUID(),
+                  (this.option == 4)? 4 : 0, (this.option == 3 || this.option == 4)?  this._fieldController1.text : "Updated the" + this._title.replaceAll("Update", "") + " field.",
+                  (this.option == 4)? 1 : 0
+              );
+              DialogTemplate.terminateLoader();
+
+              if(logCode == 1)
+                if (this.option == 4) DialogTemplate.showFormMessage(context, "Request sent successfully");
+                else DialogTemplate.showFormMessage(context, "Update successful");
+              else
+                if (this.option == 4) DialogTemplate.showFormMessage(context, "Request sent but failed to make a log");
+                else DialogTemplate.showFormMessage(context, "Update successful but failed to register a log.");
             }
             else {
               DialogTemplate.showFormMessage(context, "Please, fill the form.");
@@ -174,7 +210,7 @@ class ProfileEditState extends State<ProfileEdit> {
                   tileMode: TileMode.clamp),
             ),
           ),
-          title: Text('Update ' + this._title, style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+          title: Text(this._title, style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
           leading: new IconButton (
             color: Colors.black,
             onPressed: () => Navigator.of(context).pop(),

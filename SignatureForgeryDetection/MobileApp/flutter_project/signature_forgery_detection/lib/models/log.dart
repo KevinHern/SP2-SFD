@@ -1,16 +1,37 @@
-enum LogStatus{APPROVED, PENDING, SHOW, DENIED}
+enum LogStatus{SHOW, PENDING, APPROVED, DENIED}
 enum LogType{INFO, REPORT, CHECK}
 
 class Log {
-  LogType logType;
-  String overview, description, logId;
-  LogStatus status;
+  int logId, logType;
+  String overview, description, who, victim, victimid, reason, _date;
+  int status, action;
+  bool _hide;
+  /*
+    ACTION:
+    0 == CREATION
+    1 == EDIT
+    2 == VERIFICATION
+    3 == DELETION
+    4 == DELETION
+   */
 
-  Log(String logId, LogType logType, String overview, String description, LogStatus status) {
+  /*
+    STATUS:
+    0 == SHOW
+    1 == PENDING
+    2 == APPROVED
+    3 == DENIED
+   */
+
+  Log(int logId, int logType, String description, String who, String victim, String victimid, int action, String reason, int status) {
     this.logId = logId;
     this.logType = logType;
-    this.overview = overview;
     this.description = description;
+    this.who = who;
+    this.victim = victim;
+    this.victimid = victimid;
+    this.action = action;
+    this.reason = reason;
     this.status = status;
   }
 
@@ -50,6 +71,21 @@ class Log {
       case "description":
         return this.description;
         break;
+      case "who":
+        return this.who;
+        break;
+      case "victim":
+        return this.victim;
+        break;
+      case "victimid":
+        return this.victimid;
+        break;
+      case "reason":
+        return this.reason;
+        break;
+      case "action":
+        return this.action;
+        break;
       case "status":
         return this.status;
         break;
@@ -58,6 +94,7 @@ class Log {
     }
   }
 
+  /*
   int getLogTypeAsInt(){
     switch(this.logType){
       case LogType.INFO: return 0;
@@ -67,13 +104,15 @@ class Log {
     }
   }
 
+   */
+
   void updateFieldByString(String param, Object value) {
     switch(param) {
       case "id":
-        this.logId = value as String;
+        this.logId = value as int;
         break;
       case "type":
-        this.logType = value as LogType;
+        this.logType = value as int;
         break;
       case "overview":
         this.overview = value as String;
@@ -82,10 +121,27 @@ class Log {
         this.description = value as String;
         break;
       case "status":
-        this.status = value as LogStatus;
+        this.status = value as int;
         break;
       default:
         return null;
     }
   }
+
+  void setHide(bool hide){
+    this._hide = hide;
+  }
+
+  bool getHide(){
+    return this._hide;
+  }
+
+  void setDate(String date){
+    this._date = date;
+  }
+
+  String getDate(){
+    return this._date;
+  }
+
 }

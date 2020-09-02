@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "30742903823",
+    "firebase_url": "https://signature-forgery-detection.firebaseio.com",
+    "project_id": "signature-forgery-detection",
+    "storage_bucket": "signature-forgery-detection.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:30742903823:android:da8d2c51259681d74b377a",
+        "android_client_info": {
+          "package_name": "com.example.signature_forgery_detection"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "30742903823-flu8cs1p2qlmjjjte8ks3ou0f3bo7h79.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAnksldRpoKJg16uqfaIGpk0Zx6LzwCJB8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "30742903823-flu8cs1p2qlmjjjte8ks3ou0f3bo7h79.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -9,11 +9,12 @@ class DialogTemplate {
         context: context,
         builder: (context) {
           return new AlertDialog(
-            title: new Text("Aviso"),
+            title: new Text("Warning"),
             content: new Text(message),
             actions: <Widget>[
               new FlatButton(
                 onPressed: () {
+                  Navigator.of(context).pop();
                   Navigator.of(context).pop();
                 },
                 child: new Text("Ok"),
@@ -24,17 +25,37 @@ class DialogTemplate {
     );
   }
 
-  static void showMessage(BuildContext context, String message){
+  static void showLogConfirmationMessage(BuildContext context, String message){
     showDialog(
         context: context,
         builder: (context) {
           return new AlertDialog(
-            title: new Text("Aviso"),
+            title: new Text("Warning"),
             content: new Text(message),
             actions: <Widget>[
               new FlatButton(
                 onPressed: () {
                   Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                },
+                child: new Text("Ok"),
+              ),
+            ],
+          );
+        }
+    );
+  }
+
+  static void showMessage(BuildContext context, String message) async {
+    await showDialog(
+        context: context,
+        builder: (context) {
+          return new AlertDialog(
+            title: new Text("Warning"),
+            content: new Text(message),
+            actions: <Widget>[
+              new FlatButton(
+                onPressed: () {
                   Navigator.of(context).pop();
                 },
                 child: new Text("Ok"),
@@ -49,16 +70,17 @@ class DialogTemplate {
     String message = "";
     if(code == 1) {
       // If update was successful
-      message = "El dato se actualizó correctamente.";
+      message = "Field has been updated.";
     }
     else if(code == 2) {
       // If during update a crash occurred
-      message = "Ocurrió un error al actualizar el dato.\nInténtelo de nuevo";
+      message = "An error occurred while updating the data.\nPlease, try again";
     }
     else if(code == 3) {
       // If the user lost authentication
-      message = "Ocurrió un error fatal.\nAl parecer se perdieron sus credenciales.\n\nPor favor, salga de la app, ingrese otra vez y vuelva a intentarlo.";
+      message = "A fatal error has occurred.\nIt seems your credentials were lost.\n\nPlease, restart the app and try again";
     }
+    Navigator.of(context).pop();
     showMessage(context, message);
   }
 
@@ -74,7 +96,7 @@ class DialogTemplate {
     }
     else if(code == 3) {
       // If the user lost authentication
-      message = "Ocurrió un error fatal.\nAl parecer se perdieron sus credenciales.\n\nPor favor, salga de la app, ingrese otra vez y vuelva a intentarlo.";
+      message = "A fatal error has occurred.\nIt seems your credentials were lost.\n\nPlease, restart the app and try again";
     }
     showMessage(context, message);
   }
@@ -91,7 +113,7 @@ class DialogTemplate {
     }
     else if(code == 3) {
       // If the user lost authentication
-      message = "Ocurrió un error fatal.\nAl parecer se perdieron sus credenciales.\n\nPor favor, salga de la app, ingrese otra vez y vuelva a intentarlo.";
+      message = "A fatal error has occurred.\nIt seems your credentials were lost.\n\nPlease, restart the app and try again";
     }
     showMessage(context, message);
   }
@@ -108,7 +130,7 @@ class DialogTemplate {
     }
     else if(code == 3) {
       // If the user lost authentication
-      message = "Ocurrió un error fatal.\nAl parecer se perdieron sus credenciales.\n\nPor favor, salga de la app, ingrese otra vez y vuelva a intentarlo.";
+      message = "A fatal error has occurred.\nIt seems your credentials were lost.\n\nPlease, restart the app and try again";
     }
     showMessage(context, message);
   }

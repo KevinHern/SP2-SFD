@@ -6,45 +6,94 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class QueryEmployee {
-  final employees = FirebaseFirestore.instance.collection("example-employees");
+  final employees = FirebaseFirestore.instance.collection("employees");
 
-  Future updateEmployeeField(Employee employee, int option, List<String> newValues) async {
+  Future updateEmployeeField(Employee employee, int option, var newValues) async {
     FirebaseAuth _auth = FirebaseAuth.instance;
     int code = 0;
     if(_auth.currentUser != null) {
       try {
-        switch(option) {
-          case 0:
-            await employees.doc(employee.getUID()).update({
-              'department': newValues[0]
-            });
-            employee.updateByString("dept", newValues[0]);
-            break;
-          case 1:
-            await employees.doc(employee.getUID()).update({
-              'position': newValues[0]
-            });
-            employee.updateByString("position", newValues[0]);
-            break;
-          case 2:
-            await employees.doc(employee.getUID()).update({
-              'init': newValues[0]
-            });
-            employee.updateByString("init", newValues[0]);
-            break;
-          case 3:
-            await employees.doc(employee.getUID()).update({
-              'end': newValues[0]
-            });
-            employee.updateByString("phone", newValues[0]);
-            break;
-          default:
-            throw new NullThrownError();
-        }
-        code = 1;
+        code = await FirebaseFirestore.instance
+            .runTransaction<int>((transaction) async {
+          final doc = this.employees.doc(employee.getUID());
+          DocumentSnapshot snapshot = await transaction.get(doc);
+
+          if (!snapshot.exists) {
+            return -1;
+          }
+          else {
+            switch(option) {
+              case 0:
+                transaction.update(doc, {
+                  'department': newValues[0]
+                });
+                employee.updateByString("dept", newValues[0]);
+                break;
+              case 1:
+                transaction.update(doc, {
+                  'position': newValues[0]
+                });
+                employee.updateByString("position", newValues[0]);
+                break;
+              case 2:
+                transaction.update(doc, {
+                  'init': newValues[0],
+                  'end': newValues[1]
+                });
+                employee.updateByString("init", newValues[0]);
+                employee.updateByString("end", newValues[1]);
+                break;
+              case 3:
+                bool powers = employee.getPowers();
+                transaction.update(doc, {
+                  'reason': newValues[0],
+                  'powers': !powers
+                });
+                employee.setPowers(!powers);
+                break;
+              default:
+                throw new NullThrownError();
+            }
+            return 1;
+          }
+        });
       }
       catch(error) {
         code = 2;
+        print("Profile Update Error: " + error.toString());
+      }
+    }
+    else {
+      code = 3;
+    }
+    return code;
+  }
+
+  Future updatePowers(Employee employee, bool newPower) async {
+    FirebaseAuth _auth = FirebaseAuth.instance;
+    int code = 0;
+    if(_auth.currentUser != null) {
+      try {
+        code = await FirebaseFirestore.instance
+            .runTransaction<int>((transaction) async {
+          final doc = this.employees.doc(employee.getUID());
+          DocumentSnapshot snapshot = await transaction.get(doc);
+
+          if (!snapshot.exists) {
+            return -1;
+          }
+          else {
+            transaction.update(doc, {
+              'powers': newPower
+            });
+            employee.setPowers(newPower);
+            return 1;
+          }
+        });
+      }
+      catch(error) {
+        code = 2;
+        print("Profile Update Error: " + error.toString());
       }
     }
     else {

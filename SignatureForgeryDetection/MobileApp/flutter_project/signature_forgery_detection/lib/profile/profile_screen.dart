@@ -8,14 +8,6 @@ import 'profile_edit.dart';
 // Templates
 import 'package:signature_forgery_detection/templates/container_template.dart';
 
-class Test extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    // TODO: implement build
-    return ProfileScreen();
-  }
-}
-
 class ProfileScreen extends StatefulWidget {
   final Employee employee;
   ProfileScreen({Key key, @required this.employee}) : super(key: key);
@@ -28,7 +20,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   final Color _iconColor = new Color(0xff6F74DD).withOpacity(0.60);
   final Employee employee;
   final List<Widget> _settingsBtns = [];
-  final List<Widget> _employeeInfo = [];
+  List<Widget> _employeeInfo = [];
   final List<IconData> _icons =[Icons.email, Icons.lock,
                         Icons.phone, Icons.share, Icons.schedule];
 
@@ -43,57 +35,11 @@ class ProfileScreenState extends State<ProfileScreen> {
           new IconButton(
             icon: new Icon(Icons.edit, color: new Color(0x6F74DD).withOpacity(0.60),),
             onPressed: () {
-              setState(() {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileEditScreen(employee: this.employee, option: i)));
-              });
+                Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileEditScreen(employee: this.employee, option: i))).then((value) => setState(() {}));
             },
           )
       );
     }
-
-    // Add INFO list Tile
-    // Email
-    this._employeeInfo.add(
-      new ListTile(
-        leading: new Icon(this._icons[0], color: this._iconColor,),
-        title: new Text(this.employee.getParameterByString("email")),
-        trailing: this._settingsBtns[0],
-      ),
-    );
-
-    // Password
-    this._employeeInfo.add(
-      new ListTile(
-        leading: new Icon(this._icons[1], color: this._iconColor,),
-        title: new Text("******"),
-        trailing: this._settingsBtns[1],
-      ),
-    );
-
-    // Phone
-    this._employeeInfo.add(
-      new ListTile(
-        leading: new Icon(this._icons[2], color: this._iconColor,),
-        title: new Text(this.employee.getParameterByString("phone")),
-        trailing: this._settingsBtns[3],
-      ),
-    );
-
-    // Department
-    this._employeeInfo.add(
-      new ListTile(
-        leading: new Icon(this._icons[3], color: this._iconColor,),
-        title: new Text(this.employee.getParameterByString("dept")),
-      ),
-    );
-
-    // Schedule
-    this._employeeInfo.add(
-      new ListTile(
-        leading: new Icon(this._icons[4], color: this._iconColor,),
-        title: new Text(this.employee.getParameterByString("init") + " to " + this.employee.getParameterByString("end")),
-      ),
-    );
   }
 
   Widget _profilePicture(){
@@ -157,6 +103,63 @@ class ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    this._employeeInfo = [];
+    this._employeeInfo.add(
+      new ListTile(
+        leading: new Icon(this._icons[0], color: this._iconColor,),
+        title: new Text("Email"),
+        subtitle: new Text(this.employee.getParameterByString("email")),
+        trailing: this._settingsBtns[0],
+      ),
+    );
+
+    // Password
+    this._employeeInfo.add(
+      new ListTile(
+        leading: new Icon(this._icons[1], color: this._iconColor,),
+        title: new Text("Password"),
+        subtitle: new Text("******"),
+        trailing: this._settingsBtns[1],
+      ),
+    );
+
+    // Phone
+    this._employeeInfo.add(
+      new ListTile(
+        leading: new Icon(this._icons[2], color: this._iconColor,),
+        title: new Text("Phone Number"),
+        subtitle: new Text(this.employee.getParameterByString("phone")),
+        trailing: this._settingsBtns[3],
+      ),
+    );
+
+    // Birthday
+    this._employeeInfo.add(
+      new ListTile(
+        leading: new Icon(Icons.cake, color: this._iconColor,),
+        title: new Text("Birthday"),
+        subtitle: new Text(this.employee.getParameterByString("birthday")),
+        trailing: this._settingsBtns[4],
+      ),
+    );
+
+    // Department
+    this._employeeInfo.add(
+      new ListTile(
+        leading: new Icon(this._icons[3], color: this._iconColor,),
+        title: new Text("Department"),
+        subtitle: new Text(this.employee.getParameterByString("dept")),
+      ),
+    );
+
+    // Schedule
+    this._employeeInfo.add(
+      new ListTile(
+        leading: new Icon(this._icons[4], color: this._iconColor,),
+        title: new Text("Schedule"),
+        subtitle: new Text(this.employee.getParameterByString("init") + " to " + this.employee.getParameterByString("end")),
+      ),
+    );
     return this._profile();
   }
 }

@@ -1,5 +1,6 @@
 // Basic Imports
 import 'package:flutter/material.dart';
+import 'package:signature_forgery_detection/backend/log_query.dart';
 
 // Routes
 import 'package:signature_forgery_detection/log/log_information.dart';
@@ -8,6 +9,10 @@ import 'package:signature_forgery_detection/models/log.dart';
 // Templates
 import 'package:signature_forgery_detection/templates/container_template.dart';
 import 'package:signature_forgery_detection/templates/button_template.dart';
+import 'package:signature_forgery_detection/templates/dialog_template.dart';
+
+// Bakckend
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MainLogScreen extends StatefulWidget {
   MainLogScreen({Key key}) : super(key: key);
@@ -18,11 +23,10 @@ class MainLogScreen extends StatefulWidget {
 
 class MainLogScreenState extends State<MainLogScreen> {
   String registerText = "", searchText = "";
-  final int _iconColor = 0xff3949AB;
-  String _filterText;
+  TextEditingController _filterText =
+  new TextEditingController(text: "${DateTime.parse(new DateTime.now().toString()).day}/${DateTime.parse(new DateTime.now().toString()).month}/${DateTime.parse(new DateTime.now().toString()).year}");
   var visibleLogs = [];
   var _logIcons = [];
-  var _logs = [];
 
   @override
   void initState(){
@@ -41,19 +45,9 @@ class MainLogScreenState extends State<MainLogScreen> {
 
     this.visibleLogs = [true, true, true, true, true, true];
 
-    this._logs.add(new Log("log0", LogType.INFO, "overview", "description", LogStatus.SHOW));
-    this._logs.add(new Log("log0", LogType.REPORT, "overview", "description", LogStatus.PENDING));
-    this._logs.add(new Log("log0", LogType.CHECK, "overview", "description", LogStatus.SHOW));
-    this._logs.add(new Log("log0", LogType.INFO, "overview", "description", LogStatus.SHOW));
-    this._logs.add(new Log("log0", LogType.REPORT, "overview", "description", LogStatus.APPROVED));
-    this._logs.add(new Log("log0", LogType.CHECK, "overview", "description", LogStatus.SHOW));
   }
 
-  MainLogScreenState() : this._filterText = "Show today logs";
-
-  Widget _buildFilter() {
-    return null;//FormTemplate.buildDropDown(items, displaying);
-  }
+  MainLogScreenState();
 
   Widget _buildSearchBar(){
     return new Container(
@@ -68,10 +62,17 @@ class MainLogScreenState extends State<MainLogScreen> {
         ),
         child: new ListTile(
           leading: Icon(Icons.search, color: new Color(0x00000000).withOpacity(0.60), size: 35,),
-          title: new Text(this._filterText),
+          title: new Text("Date: " + this._filterText.text),
           trailing: new Icon(Icons.arrow_drop_down),
-          onTap: () {
-
+          onTap: () async {
+            DateTime date = await showDatePicker(
+              context: context,
+              firstDate: DateTime(DateTime.now().year-2),
+              lastDate: DateTime(DateTime.now().year+1),
+              initialDate: DateTime.now(),
+            );
+            this._filterText.text = "${DateTime.parse(date.toString()).day}/${DateTime.parse(date.toString()).month}/${DateTime.parse(date.toString()).year}";
+            setState(() {});
           },
         ),
     );
@@ -84,22 +85,37 @@ class MainLogScreenState extends State<MainLogScreen> {
     );
   }
 
-  Widget _buildLogTile(int index, Log log){
+  Widget _buildLogTile(DocumentSnapshot snapshot){
+    Log log = new Log(
+        int.parse(snapshot.id),
+        snapshot.get("type"),
+        snapshot.get("description"),
+        snapshot.get("who"),      // Employee's Name + Last Name
+        snapshot.get("victim"),   // Client's Name + Last Name
+        snapshot.get("victimid"), // Victim's ID for deletion purposes
+        snapshot.get("action"),
+        snapshot.get("reason"),
+        snapshot.get("status")
+    );
+    log.setHide(true);
+    log.setDate(snapshot.get("date"));
+    String overviewTxt = (log.getFieldByString("who") as String) + " " + (log.getFieldByString("description")  as String) + " " + (log.getFieldByString("victim") as String);
+    
     return new Visibility(
-      visible: this.visibleLogs[index],
+      visible: log.getHide(),
       child: ContainerTemplate.buildContainer(
         new Column(
           children: <Widget>[
             new ListTile(
-              leading: new Padding(padding: EdgeInsets.only(left: 0,), child: this._logIcons[log.getLogTypeAsInt()],),
+              leading: new Padding(padding: EdgeInsets.only(left: 0,), child: this._logIcons[log.logType],),
               title: new Wrap(
-                children: <Widget>[new Text(log.getFieldByString("overview"), style: new TextStyle(fontSize: 20), textAlign: TextAlign.left,)],
+                children: <Widget>[new Text(overviewTxt, style: new TextStyle(fontSize: 20), textAlign: TextAlign.left,)],
               ),
             ),
             new Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>[
-                ButtonTemplate.buildBasicButton(  // Close Button
+                ButtonTemplate.buildBasicButton(  // Info Button
                   () {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => LogInfoScreen(log: log)));
                   },
@@ -108,10 +124,12 @@ class MainLogScreenState extends State<MainLogScreen> {
                   0xFFFFFFFF
                 ),
                 ButtonTemplate.buildBasicButton(  // Close Button
-                  () {
-                    setState(() {
-                      this.visibleLogs[index] = false;
-                    });
+                  () async {
+                    DialogTemplate.initLoader(context, "Processing...");
+                    await (new QueryLog()).hideLog(log);
+                    DialogTemplate.terminateLoader();
+                    log.setHide(true);
+                    setState(() {});
                   },
                   0xFFe30224,
                   "Close",
@@ -128,6 +146,8 @@ class MainLogScreenState extends State<MainLogScreen> {
     );
   }
 
+  final ScrollController listScrollController = new ScrollController();
+
   Widget _buildDisplayLogs() {
     return new Container(
       decoration: new BoxDecoration(
@@ -141,11 +161,30 @@ class MainLogScreenState extends State<MainLogScreen> {
       width: double.infinity,
       height: 500,
       // REPLACE THIS LISTVIEW WITH LISTVIEW BUILDER WHEN IMPLEMENTING BACKEND
-      child: new ListView.builder(
-        itemCount: this._logs.length,
-        itemBuilder: (context, index) {
-          return this._buildLogTile(index, this._logs[index]);
-        }
+      child: new StreamBuilder(
+        stream: FirebaseFirestore.instance.collection("logs").where('date', isEqualTo: _filterText.text).where('hide', isEqualTo: false).snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return Center(
+                child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue)));
+          } else {
+            if (snapshot.data.documents.length > 0) {
+              return ListView.builder(
+                itemCount: snapshot.data.documents.length,
+                itemBuilder: (context, index) {
+                  return _buildLogTile(snapshot.data.documents[index]);
+                },
+              );
+            }
+            else {
+              return new AlertDialog(
+                title: new Text("Warning"),
+                content: new Text("No matches were found."),
+              );
+            }
+          }
+        },
       ),
     );
   }

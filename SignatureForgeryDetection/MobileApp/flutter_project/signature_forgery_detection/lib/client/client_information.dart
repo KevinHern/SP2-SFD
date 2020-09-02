@@ -9,35 +9,36 @@ import 'package:signature_forgery_detection/client/client_edit.dart';
 import 'package:signature_forgery_detection/templates/container_template.dart';
 
 class ClientInfoScreen extends StatelessWidget {
-  final String uid;
-  ClientInfoScreen({Key key, @required this.uid});
+  final Client client;
+  final String issuer;
+  final bool issuerPowers;
+  ClientInfoScreen({Key key, @required this.client, @required this.issuer, @required this.issuerPowers});
 
   @override
   Widget build(BuildContext context) {
-    return ClientInfo(uid: this.uid,);
+    return ClientInfo(client: this.client, issuer: this.issuer, issuerPowers: this.issuerPowers,);
   }
 }
 
 class ClientInfo extends StatefulWidget {
-  final String uid;
-  ClientInfo({Key key, @required this.uid});
+  final Client client;
+  final String issuer;
+  final bool issuerPowers;
+  ClientInfo({Key key, @required this.client, @required this.issuer, @required this.issuerPowers});
 
-  ClientInfoState createState() => ClientInfoState(uid: this.uid);
+  ClientInfoState createState() => ClientInfoState(client: this.client, issuer: this.issuer, issuerPowers: this.issuerPowers);
 }
 
 class ClientInfoState extends State<ClientInfo> {
-  final String uid;
-  var dummyDate = new DateTime.now();
-      //"${DateTime.parse(new DateTime.now().toString()).day}-${DateTime.parse(new DateTime.now().toString()).month}-${DateTime.parse(new DateTime.now().toString()).year}";
+  final Client client;
+  final String issuer;
+  final bool issuerPowers;
 
-  Client client = new Client("Dummy Dummy", "Bolonguis Tulilis", "dummy@gmail.com", "01020304", DateTime.now(), DateTime.now());
-  ClientInfoState({Key key, @required this.uid});
+  ClientInfoState({Key key, @required this.client, @required this.issuer, @required this.issuerPowers});
 
   final Color _iconColor = new Color(0xff6F74DD).withOpacity(0.60);
   final List<Widget> _settingsBtns = [];
-  final List<Widget> _clientInfo = [];
-  final List<IconData> _icons =[Icons.email, Icons.lock,
-    Icons.phone, Icons.cake, Icons.calendar_today];
+  List<Widget> _clientInfo = [];
 
   @override
   void initState() {
@@ -48,90 +49,19 @@ class ClientInfoState extends State<ClientInfo> {
           new IconButton(
             icon: new Icon(Icons.edit, color: new Color(0x6F74DD).withOpacity(0.60),),
             onPressed: () {
-              setState(() {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => ClientEditScreen(client: this.client, option: i)));
-              });
+              Navigator.push(context, MaterialPageRoute(builder: (context) => ClientEditScreen(client: this.client, option: i, issuer: this.issuer))).then((value) => setState(() {}));
             },
           )
       );
     }
 
-    // Widgets
-
-    // Add INFO list Tile
-    // Email
-    this._clientInfo.add(
-      new ListTile(
-        leading: new Icon(this._icons[0], color: this._iconColor,),
-        title: new FittedBox(
-          fit: BoxFit.fitWidth,
-          child: new Text(this.client.getParameterByString("email")),
-        ),
-        trailing: this._settingsBtns[0],
-      ),
-    );
-
-    // Password
-    this._clientInfo.add(
-      new ListTile(
-        leading: new Icon(this._icons[1], color: this._iconColor,),
-        title: new Text("*********"),
-        trailing: this._settingsBtns[1],
-      ),
-    );
-
-    // Phone
-    this._clientInfo.add(
-      new ListTile(
-        leading: new Icon(this._icons[2], color: this._iconColor,),
-        title: new Text(this.client.getParameterByString("phone")),
-        trailing: this._settingsBtns[2],
-      ),
-    );
-
-
-    // Birthday
-    var birthday = this.client.getParameterByString("birthday");
-    var dummyDate =
-      "${DateTime.parse(birthday.toString()).day}-${DateTime.parse(birthday.toString()).month}-${DateTime.parse(birthday.toString()).year}";
-
-    this._clientInfo.add(
-      new ListTile(
-        leading: new Icon(this._icons[3], color: this._iconColor,),
-        title: new Text(dummyDate.toString()),
-        trailing: this._settingsBtns[3],
-      ),
-    );
-
-    // Registration Date
-    var reg = this.client.getParameterByString("registration");
-    var regDate =
-        "${DateTime.parse(reg.toString()).day}-${DateTime.parse(reg.toString()).month}-${DateTime.parse(reg.toString()).year}";
-    this._clientInfo.add(
-      new ListTile(
-        leading: new Icon(this._icons[4], color: this._iconColor,),
-        title: new Text(regDate.toString()),
-      ),
-    );
-
-    this._clientInfo.add(
-        new Padding(padding: EdgeInsets.only(left: 30, right: 30),
-          child: RaisedButton(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30.0),
-            ),
-            //padding: new EdgeInsets.only(left: 20, right: 20),
-            onPressed: () {
-
-            },
-            color: new Color(0xFF002FD3),
-            textColor: Colors.white,
-            child: Text("Check Signatures",
-                style: TextStyle(fontSize: 18)),
-          ),
+    this._settingsBtns.add(
+        new IconButton(
+          icon: new Icon(Icons.delete_forever, color: new Color(0xFFFFFFFF),),
+          onPressed: () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => ClientEditScreen(client: this.client, option: this.client.getTotalRealParameters(), issuer: this.issuer))).then((value) => setState(() {}));
+          },
         )
-
-
     );
   }
 
@@ -236,13 +166,10 @@ class ClientInfoState extends State<ClientInfo> {
               child: new Padding(
                 padding: EdgeInsets.only(right: 8),
                 child: new FloatingActionButton(
-                  onPressed: () {
-
-                  },
                   elevation: 10,
                   hoverElevation: 10,
                   backgroundColor: Colors.red,
-                  child: new Icon(Icons.delete_forever),
+                  child: this._settingsBtns[this.client.getTotalRealParameters()],
                   mini: true,
                 ),
               ),
@@ -256,6 +183,69 @@ class ClientInfoState extends State<ClientInfo> {
 
   @override
   Widget build(BuildContext context) {
+
+    // Add INFO list Tile
+    // Email
+    this._clientInfo = [];
+    this._clientInfo.add(
+      new ListTile(
+        leading: new Icon(Icons.email, color: this._iconColor,),
+        title: new Text("Email"),
+        subtitle: new FittedBox(
+          fit: BoxFit.fitWidth,
+          child: new Text(this.client.getParameterByString("email")),
+        ),
+        trailing: this._settingsBtns[0],
+      ),
+    );
+
+    // Phone
+    this._clientInfo.add(
+      new ListTile(
+        leading: new Icon(Icons.phone, color: this._iconColor,),
+        title: new Text("Phone Number"),
+        subtitle: new Text(this.client.getParameterByString("phone")),
+        trailing: this._settingsBtns[1],
+      ),
+    );
+
+    // Birthday
+    this._clientInfo.add(
+      new ListTile(
+        leading: new Icon(Icons.cake, color: this._iconColor,),
+        title: new Text("Birthday"),
+        subtitle: new Text(this.client.getParameterByString("birthday")),
+        trailing: this._settingsBtns[2],
+      ),
+    );
+
+    // Registration Date
+    this._clientInfo.add(
+      new ListTile(
+        leading: new Icon(Icons.date_range, color: this._iconColor,),
+        title: new Text("Registration Date"),
+        subtitle: new Text(this.client.getParameterByString("registration")),
+      ),
+    );
+
+    this._clientInfo.add(
+        new Padding(padding: EdgeInsets.only(left: 30, right: 30),
+          child: RaisedButton(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30.0),
+            ),
+            //padding: new EdgeInsets.only(left: 20, right: 20),
+            onPressed: () {
+
+            },
+            color: new Color(0xFF002FD3),
+            textColor: Colors.white,
+            child: Text("Check Signatures",
+                style: TextStyle(fontSize: 18)),
+          ),
+        )
+    );
+
     return new Scaffold(
       appBar: new AppBar(
         leading: new IconButton (
@@ -277,7 +267,7 @@ class ClientInfoState extends State<ClientInfo> {
                 tileMode: TileMode.clamp),
           ),
         ),
-        title: Text('Informacion de la Cuenta', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+        title: Text('Client Information', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
       ),
       body: this._profile(),//this._screens[this._pageIndex],
     );

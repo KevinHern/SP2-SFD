@@ -1,14 +1,25 @@
 class Employee{
-  var user;
+  var _user;
   String _uid;
   bool _hasPowers;
   List<String> _information = new List();
   //_name, _lastName, _email, _phoneNumber, _department, _position, _Schedule;
-  DateTime _birthday;
 
-  Employee(String name, String lastName, String email, String phoneNumber,
+  Employee(String name, String lastName, String email, String phoneNumber, String birthday,
       String department, String position, String initSchedule, String endSchedule){
-    this._information = [email, name, lastName, phoneNumber, department, position, initSchedule, endSchedule];
+    this._information = [email, name, lastName, phoneNumber, birthday, department, position, initSchedule, endSchedule];
+  }
+
+  void setUser(var user){
+    this._user = user;
+  }
+
+  Object getUser(){
+    return this._user;
+  }
+
+  void setUID(String uid){
+    this._uid = uid;
   }
 
   String getUID(){
@@ -30,17 +41,20 @@ class Employee{
       case "phone":
         index = 3;
         break;
-      case "dept":
+      case "birthday":
         index = 4;
         break;
-      case "position":
+      case "dept":
         index = 5;
         break;
-      case "init":
+      case "position":
         index = 6;
         break;
-      case "end":
+      case "init":
         index = 7;
+        break;
+      case "end":
+        index = 8;
         break;
       default:
         index = -1;
@@ -56,10 +70,18 @@ class Employee{
   String getParameterByInt(int option) { return this._information[option]; }
 
   List getInformation() { return this._information; }
-  int getTotalRealParameters() { return 4;} // Email, Password, Name + LastName + phone
+  int getTotalRealParameters() { return 5;} // Email, Password, Name + LastName,  phone, birthday
 
   void updateByString(String parameter, var value){
     int index = mapParamStringToInt(parameter);
     (index == -1)? null : this._information[index] = value;
+  }
+
+  void setPowers(bool hasIt){
+    this._hasPowers = hasIt;
+  }
+
+  bool getPowers(){
+    return this._hasPowers;
   }
 }

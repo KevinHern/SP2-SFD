@@ -11,13 +11,15 @@ import 'package:signature_forgery_detection/employee/employee_search.dart';
 import 'package:signature_forgery_detection/templates/container_template.dart';
 
 class MainEmployeeScreen extends StatefulWidget {
-  MainEmployeeScreen({Key key}) : super(key: key);
+  final Employee employee;
+  MainEmployeeScreen({Key key, @required this.employee}) : super(key: key);
 
   @override
-  MainEmployeeScreenState createState() => MainEmployeeScreenState();
+  MainEmployeeScreenState createState() => MainEmployeeScreenState(employee: this.employee);
 }
 
 class MainEmployeeScreenState extends State<MainEmployeeScreen> {
+  final Employee employee;
   int _pageIndex, _navIndex;
   String registerText = "", searchText = "";
   final int _iconColor = 0xff3949AB;
@@ -27,7 +29,7 @@ class MainEmployeeScreenState extends State<MainEmployeeScreen> {
     super.initState();
   }
 
-  MainEmployeeScreenState() : this._pageIndex = 1, this._navIndex = 1;
+  MainEmployeeScreenState({Key key, @required this.employee}) : this._pageIndex = 1, this._navIndex = 1;
 
   Widget _buildDefaultTile(IconData iconData, String text, int pindex){
     return new Center(
@@ -71,11 +73,11 @@ class MainEmployeeScreenState extends State<MainEmployeeScreen> {
   Widget returnScreen() {
     switch(this._pageIndex) {
       case 0:
-        return RegisterEmployee();
+        return RegisterEmployee(issuer: this.employee.getParameterByString("name") + " " + this.employee.getParameterByString("lname"),);
       case 1:
         return defaultScreen();
       case 2:
-        return new SearchPeople();
+        return new SearchPeople(issuer: this.employee.getParameterByString("name") + " " + this.employee.getParameterByString("lname"),);
       default:
         throw new NullThrownError();
     }

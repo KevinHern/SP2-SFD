@@ -9,35 +9,40 @@ import 'package:signature_forgery_detection/models/employee.dart';
 import 'package:signature_forgery_detection/templates/container_template.dart';
 
 class EmployeeInfoScreen extends StatelessWidget {
-  final String uid;
-  EmployeeInfoScreen({Key key, @required this.uid});
+  final Employee employee;
+  final String issuer;
+  EmployeeInfoScreen({Key key, @required this.employee, @required this.issuer});
 
   @override
   Widget build(BuildContext context) {
-    return EmployeeInfo(uid: this.uid,);
+    return EmployeeInfo(employee: this.employee, issuer: this.issuer);
   }
 }
 
 class EmployeeInfo extends StatefulWidget {
-  final String uid;
-  EmployeeInfo({Key key, @required this.uid});
+  final Employee employee;
+  final String issuer;
+  EmployeeInfo({Key key, @required this.employee, @required this.issuer});
 
-  EmployeeInfoState createState() => EmployeeInfoState(uid: this.uid);
+  EmployeeInfoState createState() => EmployeeInfoState(employee: this.employee, issuer: this.issuer);
 }
 
 class EmployeeInfoState extends State<EmployeeInfo> {
-  final String uid;
-  var dummyDate = new DateTime.now();
-  //"${DateTime.parse(new DateTime.now().toString()).day}-${DateTime.parse(new DateTime.now().toString()).month}-${DateTime.parse(new DateTime.now().toString()).year}";
+  final Employee employee;
+  final String issuer;
 
-  Employee employee = new Employee("Test Testing Lolol", "Dummy Dummy Dummmmmmmmmmm", "dummy.dummy.io@test.com", "01003040", "Testing IT", "Dummy dummy", "08:00", "15:00");
-  EmployeeInfoState({Key key, @required this.uid});
+  EmployeeInfoState({Key key, @required this.employee, @required this.issuer});
 
   final Color _iconColor = new Color(0xff6F74DD).withOpacity(0.60);
   final List<Widget> _settingsBtns = [];
-  final List<Widget> _employeeInfo = [];
+  List<Widget> _employeeInfo = [];
+  final int _iconLabelColor = 0xff6F74DD;
+  final int _borderColor = 0xff856fdd;
+  final int _borderoFocusColor = 0xff5436cf;
   final List<IconData> _icons =[Icons.email,
     Icons.phone, Icons.share, Icons.bookmark, Icons.schedule];
+  TextEditingController _reasonController = new TextEditingController();
+
 
   @override
   void initState() {
@@ -48,69 +53,59 @@ class EmployeeInfoState extends State<EmployeeInfo> {
           new IconButton(
             icon: new Icon(Icons.edit, color: new Color(0x6F74DD).withOpacity(0.60),),
             onPressed: () {
-              setState(() {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => EmployeeEditScreen(employee: this.employee, option: i)));
-              });
+              Navigator.push(context, MaterialPageRoute(builder: (context) => EmployeeEditScreen(employee: this.employee, option: i, issuer: this.issuer,))).then((value) => setState((){}));
             },
           )
       );
     }
 
+    // For deletion only
+    this._settingsBtns.add(
+        new IconButton(
+          icon: new Icon(Icons.delete_forever, color: new Color(0xFFFFFFFF)),
+          onPressed: () {
+            Navigator.push(context, MaterialPageRoute(builder: (context) => EmployeeEditScreen(employee: this.employee, option: 4, issuer: this.issuer,))).then((value) => setState((){}));
+          },
+        )
+    );
+
     // Widgets
 
     // Add INFO list Tile
-    // Email
-    this._employeeInfo.add(
-      new ListTile(
-        leading: new Icon(this._icons[0], color: this._iconColor,),
-        title: new Text(this.employee.getParameterByString("email"))
-      ),
-    );
+  }
 
-    // Phone
-    this._employeeInfo.add(
-      new ListTile(
-        leading: new Icon(this._icons[1], color: this._iconColor,),
-        title: new Text(this.employee.getParameterByString("phone")),
+  Widget forceReason(List<Widget> list){
+    this._reasonController.text = "";
+    return AlertDialog(
+      title: new Text("Warning"),
+      content: new TextFormField(
+        decoration: InputDecoration(
+          icon: Icon(Icons.description, color: Color(this._iconLabelColor).withOpacity(0.60),),
+          labelText: "Enter Reason",
+          fillColor: Colors.white,
+          //focusColor: Colors.green,
+          labelStyle: new TextStyle(
+              color: Color(this._iconLabelColor)
+          ),
+          enabledBorder:  OutlineInputBorder(
+            borderSide: BorderSide(color: Color(this._borderColor), width: 0.0),
+            borderRadius: new BorderRadius.circular(15.0),
+          ),
+          focusedBorder:OutlineInputBorder(
+            borderSide:  BorderSide(color: Color(this._borderoFocusColor), width: 2.0),
+            borderRadius: BorderRadius.circular(0.0),
+          ),
+        ),
+        validator: (String value) {
+          return (value.isEmpty) ? 'Please, fill the field' : null;
+        },
+        keyboardType: TextInputType.multiline,
+        controller: _reasonController,
+        maxLines: null,
+        readOnly: false,
       ),
+      actions: list,
     );
-
-    // Department
-    this._employeeInfo.add(
-      new ListTile(
-        leading: new Icon(this._icons[2], color: this._iconColor,),
-        title: new Text(this.employee.getParameterByString("dept")),
-        trailing: this._settingsBtns[0],
-      ),
-    );
-
-    // Position
-    this._employeeInfo.add(
-      new ListTile(
-        leading: new Icon(this._icons[3], color: this._iconColor,),
-        title: new Text(this.employee.getParameterByString("position")),
-        trailing: this._settingsBtns[1],
-      ),
-    );
-
-    // Init Schedule
-    this._employeeInfo.add(
-      new ListTile(
-        leading: new Icon(this._icons[4], color: this._iconColor,),
-        title: new Text(this.employee.getParameterByString("init")),
-        trailing: this._settingsBtns[2],
-      ),
-    );
-
-    // End Schedule
-    this._employeeInfo.add(
-      new ListTile(
-        leading: new Icon(this._icons[4], color: this._iconColor,),
-        title: new Text(this.employee.getParameterByString("end")),
-        trailing: this._settingsBtns[3],
-      ),
-    );
-
   }
 
   // Alerts
@@ -214,13 +209,10 @@ class EmployeeInfoState extends State<EmployeeInfo> {
               child: new Padding(
                 padding: EdgeInsets.only(right: 8),
                 child: new FloatingActionButton(
-                  onPressed: () {
-
-                  },
                   elevation: 10,
                   hoverElevation: 10,
                   backgroundColor: Colors.red,
-                  child: new Icon(Icons.delete_forever),
+                  child: this._settingsBtns[4],
                   mini: true,
                 ),
               ),
@@ -234,6 +226,75 @@ class EmployeeInfoState extends State<EmployeeInfo> {
 
   @override
   Widget build(BuildContext context) {
+
+    // Email
+    this._employeeInfo = [];
+    this._employeeInfo.add(
+      new ListTile(
+          leading: new Icon(this._icons[0], color: this._iconColor,),
+          title: new Text("Email"),
+          subtitle: new Text(this.employee.getParameterByString("email"))
+      ),
+    );
+
+    // Phone
+    this._employeeInfo.add(
+      new ListTile(
+        leading: new Icon(this._icons[1], color: this._iconColor,),
+        title: new Text("Phone Number"),
+        subtitle: new Text(this.employee.getParameterByString("phone")),
+      ),
+    );
+
+    // Birthday
+    this._employeeInfo.add(
+      new ListTile(
+        leading: new Icon(Icons.cake, color: this._iconColor,),
+        title: new Text("Birthday"),
+        subtitle: new Text(this.employee.getParameterByString("birthday")),
+      ),
+    );
+
+    // Department
+    this._employeeInfo.add(
+      new ListTile(
+        leading: new Icon(this._icons[2], color: this._iconColor,),
+        title: new Text("Department"),
+        subtitle: new Text(this.employee.getParameterByString("dept")),
+        trailing: this._settingsBtns[0],
+      ),
+    );
+
+    // Position
+    this._employeeInfo.add(
+      new ListTile(
+        leading: new Icon(this._icons[3], color: this._iconColor,),
+        title: new Text("Position"),
+        subtitle: new Text(this.employee.getParameterByString("position")),
+        trailing: this._settingsBtns[1],
+      ),
+    );
+
+    // Init Schedule
+    this._employeeInfo.add(
+      new ListTile(
+        leading: new Icon(this._icons[4], color: this._iconColor,),
+        title: new Text("Schedule"),
+        subtitle: new Text(this.employee.getParameterByString("init") + " to " + this.employee.getParameterByString("end")),
+        trailing: this._settingsBtns[2],
+      ),
+    );
+
+    // Powers
+    this._employeeInfo.add(
+      new ListTile(
+        leading: new Icon(Icons.fingerprint, color: this._iconColor,),
+        title: new Text("Privileges"),
+        subtitle: new Text(this.employee.getPowers()? "This employee has privileges." : "This employee does not have privileges."),
+        trailing: this._settingsBtns[3],
+      ),
+    );
+
     return new Scaffold(
       appBar: new AppBar(
         leading: new IconButton (
@@ -255,7 +316,7 @@ class EmployeeInfoState extends State<EmployeeInfo> {
                 tileMode: TileMode.clamp),
           ),
         ),
-        title: Text('Informacion de la Cuenta', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+        title: Text('Employee Information', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
       ),
       body: this._profile(),//this._screens[this._pageIndex],
     );

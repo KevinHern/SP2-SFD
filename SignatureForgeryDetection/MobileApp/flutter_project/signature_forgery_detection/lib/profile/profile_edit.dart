@@ -9,8 +9,9 @@ import 'package:signature_forgery_detection/templates/container_template.dart';
 import 'package:signature_forgery_detection/templates/form_template.dart';
 import 'package:signature_forgery_detection/templates/dialog_template.dart';
 
-// Database
+// Backend
 import 'package:signature_forgery_detection/backend/profile_query.dart';
+import 'package:signature_forgery_detection/backend/log_query.dart';
 
 class ProfileEditScreen extends StatelessWidget {
   final Employee employee;
@@ -68,6 +69,10 @@ class ProfileEditState extends State<ProfileEdit> {
         _fieldController1 = new TextEditingController(text: this.employee.getParameterByString("phone"));
         _title = "Phone Number";
         break;
+      case 4:
+        _fieldController1 = new TextEditingController(text: this.employee.getParameterByString("birthday"));
+        _title = "Birthday";
+        break;
       default:
         throw new NullThrownError();
     }
@@ -111,6 +116,14 @@ class ProfileEditState extends State<ProfileEdit> {
                 true
             );
         break;
+      case 4:
+        widgetToShow =
+            FormTemplate.buildDateInput(
+                this._fieldController1, "Birthday", Icons.cake,
+                this._iconLabelColor, this._borderColor, this._borderoFocusColor,
+                "hola", context
+            );
+        break;
       default:
         throw new NullThrownError();
     }
@@ -123,6 +136,7 @@ class ProfileEditState extends State<ProfileEdit> {
       case 0:
       case 1:
       case 3:
+      case 4:
         newValues.add(_fieldController1.text);
         break;
       case 2:
@@ -148,10 +162,20 @@ class ProfileEditState extends State<ProfileEdit> {
 
               DialogTemplate.initLoader(context, "Updating...");
               int code = await (new QueryProfile()).updateProfileField(this.employee, this.option, this.newValues);
-              DialogTemplate.terminateLoader();
-              setState((){});
 
-              DialogTemplate.showStatusUpdate(context, code);
+
+              int logCode = await (new QueryLog()).pushLog(
+                  0, " updated his or her information.",
+                  this.employee.getParameterByString("name") + " " + this.employee.getParameterByString("lname"),
+                  '',
+                  this.employee.getUID(),
+                  0, "Updated the " + this._title + " field.", 0
+              );
+              DialogTemplate.terminateLoader();
+
+              if(logCode == 1) DialogTemplate.showStatusUpdate(context, code);
+              else DialogTemplate.showMessage(context, "Update successful but failed to register a log.");
+
             }
             else {
               DialogTemplate.showFormMessage(context, "Please, fill the form.");
