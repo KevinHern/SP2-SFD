@@ -1,15 +1,18 @@
 // Basic Import
 import 'package:flutter/material.dart';
+import 'dart:io';
 
 // Templates
 import 'package:signature_forgery_detection/templates/container_template.dart';
 import 'package:signature_forgery_detection/templates/form_template.dart';
 import 'package:signature_forgery_detection/templates/dialog_template.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 // Backend
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:signature_forgery_detection/backend/log_query.dart';
+import 'package:signature_forgery_detection/templates/image_handler.dart';
 
 class RegisterEmployee extends StatefulWidget {
   final String issuer;
@@ -37,20 +40,94 @@ class RegisterEmployeeState extends State<RegisterEmployee> {
   final String issuer;
   RegisterEmployeeState({Key key, @required this.issuer});
 
+  List<File> signatures = [];
 
   Widget __buildRegisterSignatureButton(){
+    final double font_size = 15;
     return new Padding(padding: EdgeInsets.only(left: 30, right: 30),
-      child: RaisedButton(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30.0),
-        ),
-        //padding: new EdgeInsets.only(left: 20, right: 20),
-        onPressed: () {},
-        color: new Color(0xFF002FD3),
-        textColor: Colors.white,
-        child: Text("Register Signature",
-            style: TextStyle(fontSize: 18)),
-      ),
+        child: new Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            RaisedButton(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.0),
+              ),
+              //padding: new EdgeInsets.only(left: 20, right: 20),
+              onPressed: () async {
+                if(this.signatures.length > 4) DialogTemplate.showMessage(context, "No more than 5 signatures allowed");
+                else{
+                  File signature = await ImageHandler.getImage(0);
+                  if(signature != null) this.signatures.add(signature);
+                  setState(() {});
+                }
+              },
+              color: new Color(0xFF002FD3),
+              textColor: Colors.white,
+              child: Text("Signature\nfrom Camera",
+                  style: TextStyle(fontSize: font_size), textAlign: TextAlign.center),
+            ),
+            RaisedButton(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.0),
+              ),
+              //padding: new EdgeInsets.only(left: 20, right: 20),
+              onPressed: () async {
+                if(this.signatures.length > 4) DialogTemplate.showMessage(context, "No more than 5 signatures allowed");
+                else{
+                  File signature = await ImageHandler.getImage(1);
+                  if(signature != null) this.signatures.add(signature);
+                  setState(() {});
+                }
+              },
+              color: new Color(0xFF002FD3),
+              textColor: Colors.white,
+              child: Text("Signature\nfrom Gallery",
+                  style: TextStyle(fontSize: font_size), textAlign: TextAlign.center),
+            ),
+          ],
+        )
+    );
+  }
+
+  Widget _buildSignatureList(){
+    // Generating thumbnail and cross button
+    List<Widget> signatureWidgets = [];
+    for(int i = 0; i < this.signatures.length; i++) {
+      Widget thumbnail = new Stack(
+        children: <Widget>[
+          new Container(
+            padding: new EdgeInsets.all(20),
+            child: Image.file(this.signatures[i]),
+          ),
+          new Positioned(
+            top: 0,
+            right: 0,
+            child: new Padding(
+              padding: EdgeInsets.only(right: 8),
+              child: new FloatingActionButton(
+                elevation: 10,
+                hoverElevation: 10,
+                backgroundColor: Colors.red,
+                child: new IconButton(
+                  icon: new Icon(Icons.delete_forever, color: new Color(0xFFFFFFFF),),
+                  onPressed: () {
+                    this.signatures.removeAt(i);
+                    setState(() {});
+                  },
+                ),
+                mini: true,
+              ),
+            ),
+          ),
+        ],
+      );
+      signatureWidgets.add(thumbnail);
+    }
+
+    // ----- Return the blocks of thumbnails
+    return new Column(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: signatureWidgets,
     );
   }
 
@@ -84,6 +161,15 @@ class RegisterEmployeeState extends State<RegisterEmployee> {
                 'end': _scheduleEnd.text,
                 'powers': this._hasPowers,
               });
+
+              StorageReference storageReference = FirebaseStorage.instance
+                  .ref();
+              //.child('chats/${Path.basename(_image.path)}}');
+              for(int i = 0; i < this.signatures.length; i++){
+                String filename = "gsignature" + (i+1).toString() + "." + this.signatures[i].path.split('/').last.split('.').last;
+                StorageUploadTask uploadTask = storageReference.child("employees/" + newEmployee.user.uid + "/" + filename).putFile(this.signatures[i]);
+                await uploadTask.onComplete;
+              }
 
               int logCode = await (new QueryLog()).pushLog(
                   0, " registered new employee: ",
@@ -142,6 +228,36 @@ class RegisterEmployeeState extends State<RegisterEmployee> {
     );
   }
 
+  Widget _buildClearButton(){
+    final double font_size = 15;
+    return new Padding(padding: EdgeInsets.only(left: 30, right: 30),
+      child: RaisedButton(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30.0),
+        ),
+        //padding: new EdgeInsets.only(left: 20, right: 20),
+        onPressed: () {
+          this._emailController.text = "";
+          this._nameController.text = "";
+          this._lastnameController.text = "";
+          this._phone.text = "";
+          this._birthday.text = "";
+          this._department.text = "";
+          this._position.text = "";
+          this._scheduleInit.text = "";
+          this._scheduleEnd.text = "";
+          this._hasPowers = false;
+          this.signatures = [];
+          setState(() {});
+        },
+        color: new Color(0xFF002FD3),
+        textColor: Colors.white,
+        child: Text("Clear Form",
+            style: TextStyle(fontSize: font_size), textAlign: TextAlign.center),
+      ),
+    );
+  }
+
   Widget _buildForm(){
     return new Form(
       child: new ListView(
@@ -162,8 +278,9 @@ class RegisterEmployeeState extends State<RegisterEmployee> {
                   ContainerTemplate.buildContainer(new Padding(padding: EdgeInsets.only(left: 10, top: 5, bottom: 5), child: this.powerSwitch(),), [15, 15, 15, 15], 10, 5, 5, 0.15, 10),
                   //ContainerTemplate.buildContainer(new Padding(padding: EdgeInsets.only(left: 10, top: 5, bottom: 5), child: FormTemplate.buildSingleTextInput(this._scheduleInit, "Schedule", Icons.schedule, this._iconLabelColor, this._borderColor, this._borderoFocusColor, true, false),), [15, 15, 15, 15], 10, 5, 5, 0.15, 10),
                   this.__buildRegisterSignatureButton(),
-                  new Container(height: 400),
-                  this.__buildRegisterButton()
+                  this._buildSignatureList(),
+                  this.__buildRegisterButton(),
+                  this._buildClearButton(),
                 ],
               ),
               [20, 20, 20, 40], 15,

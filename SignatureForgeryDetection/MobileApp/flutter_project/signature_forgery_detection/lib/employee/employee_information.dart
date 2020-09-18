@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 // Routes
 import 'package:signature_forgery_detection/employee/employee_edit.dart';
 import 'package:signature_forgery_detection/models/employee.dart';
+import 'package:signature_forgery_detection/employee/employee_verify.dart';
 
 // Templates
 import 'package:signature_forgery_detection/templates/container_template.dart';
@@ -163,7 +164,8 @@ class EmployeeInfoState extends State<EmployeeInfo> {
         //padding: new EdgeInsets.only(left: 20, right: 20),
         onPressed: () {
           // Open camera, send picture and show result
-          this._showResult(context, false);
+          //this._showResult(context, false);
+          Navigator.push(context, MaterialPageRoute(builder: (context) => EmployeeVerifyScreen(employee: this.employee, issuer: this.issuer))).then((value) => setState(() {}));
         },
         color: new Color(0xFF002FD3),
         textColor: Colors.white,

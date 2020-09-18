@@ -4,6 +4,7 @@ import 'package:signature_forgery_detection/models/client.dart';
 
 // Routes
 import 'package:signature_forgery_detection/client/client_edit.dart';
+import 'package:signature_forgery_detection/client/client_verify.dart';
 
 // Templates
 import 'package:signature_forgery_detection/templates/container_template.dart';
@@ -120,7 +121,8 @@ class ClientInfoState extends State<ClientInfo> {
         //padding: new EdgeInsets.only(left: 20, right: 20),
         onPressed: () {
           // Open camera, send picture and show result
-          this._showResult(context, true);
+          // this._showResult(context, true);
+          Navigator.push(context, MaterialPageRoute(builder: (context) => ClientVerifyScreen(client: this.client, issuer: this.issuer))).then((value) => setState(() {}));
         },
         color: new Color(0xFF002FD3),
         textColor: Colors.white,
