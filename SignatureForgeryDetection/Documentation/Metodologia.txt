@@ -1,0 +1,34 @@
+Metodología:
+Se tiene 3 algoritmos y 2 tipos de arquitectura para la redes convolusionales.
+La metodología es realizar las siguientes 9 pruebas:
+1) 1 firmante
+2) 3 firmantes
+3) 8 firmantes
+4) 12 firmantes
+5) 17 firmantes
+6) 25 firmantes
+7) 35 firmantes
+8) 45 firmantes
+9) 55 firmantes
+
+Estas nueves pruebas se realizan con los dos tipos de arquitectura para cada algoritmo. Esto se resume a un total de 54 pruebas.
+
+Para cada prueba, se escoge de manera aleatoria la cantidad de firmantes (según la prueba) de los 55 disponibles.
+Luego, se escoge de manera aleatoria 16 números que son identificadores para 16 firmas genuinas y 16 firmas falsificadas. Estos 32 identificadores serán usado para el entrenamiento, pero dependiendo del algoritmo que se esté probando, se realizarán procedimientos extras. Lo mismo se realiza con 4 identificadores para la etapa de validación y 4 identificadores para la etapa de experimentación. Cabe aclarar que los identificadores de entrenamiento, validación y de experimentaicón son únicos y mutuamente excluyentes
+
+* Algoritmo Siamese
+Para la red siamese, este necesita pares de imágenes y una etiqueta de genuina (1) o falsificada (0). Con los 16 identificadores escogidos para el entrenamiento, se realiza una combinación de dos firmas (16C2) para generar un total de 120 pares de identificadores. Estos 120 pares serán usados para generar 120 pares genuinos y 120 pares falsificados.
+
+Lo mismo sucede para los 4 identificadores de validación y de prueba. El fin de generar muchos pares es para exponer a la red una gran diversidad de casos potenciales que puede encontrarse.
+
+* Clasificación convolusional
+Este algoritmo, trata de discernir en un solo intento el firmante y el tipo de firma (genuina o falsificada). Esto quiere decir que cada firma genuina y cada firma falsificada de un firmante es una clase independiente; da un total de 2*N clases a inferir.
+Este algoritmo se le expone 16 firmas genuinas y 16 firmas falsificadas de cada firmante (según el número de prueba) empleando los 16 identificadores. Para la etapa de validación, se le expone 4 firmas genuinas y 4 firmas falsificadas que no ha visto del mismo firmante y se realiza lo mismo para la etapa de experimentación
+
+* CLasificación firmante-firma
+Este modelo está compuesto por dos modelos. El primer modelo se encarga de inferir el firmante según la firma expuesta. Cada firmante es una clase independiente.
+Para el entrenamiento, se escogen aleatoriamente 16 firmas genuinas y 16 firmas falsificadas de cada firmante y en base a ello, debe de aprender a discernir el firmante según la firma.
+
+Para el segundo modelo, este se encarga de inferir si la firma es falsificada o genuina. Para cada firmante, se entrena su propio clasificador de firma. Entonces, cuando el modelo de clasificación de firmante infiera el firmante, se busca el clasificador de firma para dicho firmante y se discrimina si la firma es falsificada o genuina.
+
+Para el entrenamiento, los clasificadores de firma se exponen a las mismas 16 firmas genuinas y 16 firmas falsificadas que se usaron para el entrenamiento del modelo clasificador firmante

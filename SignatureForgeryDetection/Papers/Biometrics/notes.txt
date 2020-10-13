@@ -1,0 +1,67 @@
+Face Detection:
+- Most use an AI supervised learning approach
+- The core of these problems reside in image pre processing and feature extraction
+- Image pre-processing techniques found:
+	* Conversion of images to frequency space (to analyze brightness and other features)
+	* Gabor Filters
+		+ Band pass filtering
+		+ Linear edge detection technique
+		+ Used for detecting human expressions (sadness, smiling, winking, etc)
+		+ Complex plane
+- Classification Algorithms:
+	* Linear Discriminant Analysis
+	* NNets
+		+ Feature Extraction:
+			→ Convnets (no architecture displayed)
+		+ Supervised Learning:
+			→ MLFFNN = Multilayer Feed Forward Neural Nets (aka, dense nets)
+		+ Unsupervised Learning:
+			→ Siamese Networks
+			→ Deep self-coding Network:
+				* Collection of Restricted Boltzman Machines
+	* Restricted Boltzman Machine
+		+ Stochastic and generative neural networks
+		+ Learn internal representations (probability distribution) 
+		+ Represent and solve combinatoric problems.
+		+ Architecture:
+			* Free for all connections
+			* All layers connected → share info at any given time
+			* 2 Layered neural network (visible-hidden)
+			* Stack of RBMs = Deep Belief Network but are replaced by GANs or Variational Autoencoders
+- Decission methods:
+	* Gradient Descent
+	* Euclidean Distance (comparison based on distances)
+	* Normalized Correlation (decision based on correlation score of features)
+	* Softmax
+- Observations:
+	* A lot of encoders have been used (conv nets)
+	* Issues: robustness & performance
+
+-----------------------------------------------
+
+Fingerprints
+- Most use an AI supervised learning approach
+- The core of these problems reside in image pre processing and feature extraction
+- Image pre-processing techniques found:
+	* Normalization (Limit values. Range of controlled values)
+	* Fourier transform to enhance images (missing parts of the fingerprint)
+	* Binarization: transformation to white and black without loosing information
+	* Grayscale
+	* Gabor Filter: remove noise + complex plane transformation
+	* 
+- Classification Algorithms:
+	* NNets
+		+ Feature Extraction:
+			→ Convnets (no architecture displayed)
+		+ Supervised Learning:
+			→ MLFFNN = Multilayer Feed Forward Neural Nets (aka, dense nets)
+	* Transfer learning: ImageNet
+		+ Use ImageNet for feature extraction
+		+ Use ImageNet and fine tune for new task
+	* SVMs
+- Decission methods:
+	* Softmax
+- Observations:
+	* A lot of encoders have been used (conv nets)
+	* Issues: robustness & performance
+	* Adam Optimizer, learning rate of 0.0001

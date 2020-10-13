@@ -1,0 +1,28 @@
+Problema 1: Preprocesamiento de imágenes
+- Por resolver:
+	* Muy tardado
+	* Reducir procesamiento
+	* RAM limitada (no querer tener todas la imágenes en RAM)
+- Soluciones Encontradas:
+	* Multiprocesamiento:
+		+ Crear 24 Threads donde cada Thread se encarga de:
+			1. Cargar la imagen desde el Google Drive
+			2. Ajustar tamaño a 155 x 200 pixeles
+			3. Cambiar a escala de grises
+			4. Invertir colores
+			5. Convertir todos los pixeles en full black o full white aplicando un threshold
+			6. Guardar en Google Drive
+
+Problema 2: Entrenamiento muy tardado de los modelos
+- Por resolver:
+	* Demasiado tiempo invertido en entrenar un modelo
+	* Es muy tardado ir a recoger las imágenes del Google Drive
+- Soluciones Encontradas:
+	* Multiprocesamiento:
+		+ Crear 4 Threads donde cada thread se encarga de ir a traer una imagen del Google Drive
+
+Problema 3: A la hora de evaluar el modelo, da distancias iguales a 
+0- Por resolver:
+	* El resultado entregado (o predicciones del modelo) da todo igual a 0
+- Soluciones Encontradas:
+	* 
