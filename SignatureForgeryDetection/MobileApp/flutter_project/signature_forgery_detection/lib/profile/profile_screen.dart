@@ -17,7 +17,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class ProfileScreenState extends State<ProfileScreen> {
-  final Color _iconColor = new Color(0xff6F74DD).withOpacity(0.60);
+  final Color _iconColor = new Color(0xFF002FD3).withOpacity(0.60);
   final Employee employee;
   final List<Widget> _settingsBtns = [];
   List<Widget> _employeeInfo = [];
@@ -33,9 +33,9 @@ class ProfileScreenState extends State<ProfileScreen> {
       // Add EDIT functionality
       this._settingsBtns.add(
           new IconButton(
-            icon: new Icon(Icons.edit, color: new Color(0x6F74DD).withOpacity(0.60),),
-            onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileEditScreen(employee: this.employee, option: i))).then((value) => setState(() {}));
+            icon: new Icon(Icons.edit, color: _iconColor,),
+            onPressed: () async {
+                await Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileEditScreen(employee: this.employee, option: i))).then((value) {setState(() {});});
             },
           )
       );
@@ -71,8 +71,9 @@ class ProfileScreenState extends State<ProfileScreen> {
 
   Widget _profile(){
     return new ListView(
+      padding: EdgeInsets.only(top: 50),
       children: <Widget>[
-        this._profilePicture(),
+        //this._profilePicture(),
         new Text(
           this.employee.getParameterByString("name") + " " + this.employee.getParameterByString("lname"),
           style: new TextStyle(
@@ -90,7 +91,7 @@ class ProfileScreenState extends State<ProfileScreen> {
         ),
         ContainerTemplate.buildContainer(
           this._profileInfo(),
-          [30, 9, 30, 30],
+          [30, 9, 30, 100],
           20,
           15,
           15,

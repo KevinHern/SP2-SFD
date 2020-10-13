@@ -8,6 +8,7 @@ import 'package:signature_forgery_detection/employee/employee_verify.dart';
 
 // Templates
 import 'package:signature_forgery_detection/templates/container_template.dart';
+import 'package:signature_forgery_detection/templates/navbar_template.dart';
 
 class EmployeeInfoScreen extends StatelessWidget {
   final Employee employee;
@@ -16,7 +17,11 @@ class EmployeeInfoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return EmployeeInfo(employee: this.employee, issuer: this.issuer);
+    return NavBarTemplate.buildAppBar(
+      context,
+      'Employee Information',
+      new EmployeeInfo(employee: this.employee, issuer: this.issuer),
+    );
   }
 }
 
@@ -34,7 +39,7 @@ class EmployeeInfoState extends State<EmployeeInfo> {
 
   EmployeeInfoState({Key key, @required this.employee, @required this.issuer});
 
-  final Color _iconColor = new Color(0xff6F74DD).withOpacity(0.60);
+  final Color _iconColor = new Color(0xFF002FD3).withOpacity(0.60);
   final List<Widget> _settingsBtns = [];
   List<Widget> _employeeInfo = [];
   final int _iconLabelColor = 0xff6F74DD;
@@ -52,7 +57,7 @@ class EmployeeInfoState extends State<EmployeeInfo> {
       // Add EDIT functionality
       this._settingsBtns.add(
           new IconButton(
-            icon: new Icon(Icons.edit, color: new Color(0x6F74DD).withOpacity(0.60),),
+            icon: new Icon(Icons.edit, color: this._iconColor,),
             onPressed: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => EmployeeEditScreen(employee: this.employee, option: i, issuer: this.issuer,))).then((value) => setState((){}));
             },
@@ -221,7 +226,7 @@ class EmployeeInfoState extends State<EmployeeInfo> {
             ),
           ],
         ),
-        this._buildVerifyButton(),
+        //this._buildVerifyButton(),
       ],
     );
   }
@@ -297,30 +302,6 @@ class EmployeeInfoState extends State<EmployeeInfo> {
       ),
     );
 
-    return new Scaffold(
-      appBar: new AppBar(
-        leading: new IconButton (
-          color: Colors.black,
-          onPressed: () => Navigator.of(context).pop(),
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-        ),
-        backgroundColor: Colors.transparent,
-        flexibleSpace: Container(
-          decoration: new BoxDecoration(
-            gradient: new LinearGradient(
-                colors: [
-                  const Color(0x003949AB),
-                  const Color(0xFF3949AB),
-                ],
-                begin: const FractionalOffset(0.0, 0.0),
-                end: const FractionalOffset(1.0, 0.0),
-                stops: [0.0, 1.0],
-                tileMode: TileMode.clamp),
-          ),
-        ),
-        title: Text('Employee Information', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
-      ),
-      body: this._profile(),//this._screens[this._pageIndex],
-    );
+    return this._profile();
   }
 }

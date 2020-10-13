@@ -64,17 +64,12 @@ class SearchPeopleState extends State<SearchPeople> {
   }
 
   Widget _buildSearchButton(){
-    return new Padding(padding: EdgeInsets.only(left: 30, right: 30, top: 20, bottom: 10),
-      child: RaisedButton(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30.0),
-        ),
-        //padding: new EdgeInsets.only(left: 20, right: 20),
-        onPressed: () {},
-        color: new Color(0xFF002FD3),
-        textColor: Colors.white,
-        child: Text("Search",
-            style: TextStyle(fontSize: 18)),
+    return ContainerTemplate.buildBasicButton(
+      () {
+        ;
+      },
+      Text("Search",
+        style: TextStyle(fontSize: 18),
       ),
     );
   }
@@ -137,7 +132,7 @@ class SearchPeopleState extends State<SearchPeople> {
 
   Widget _buildShowResults(){
     return new ListView(
-      padding: new EdgeInsets.only(left: 30, right: 30, top: 50, bottom: 40),
+      padding: new EdgeInsets.only(left: 30, right: 30, top: 50, bottom: 100),
       children: <Widget>[
         this._buildSearchBar(),
         this._buildSearchButton(),

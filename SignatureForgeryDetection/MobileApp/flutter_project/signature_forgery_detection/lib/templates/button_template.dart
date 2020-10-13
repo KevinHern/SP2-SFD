@@ -9,7 +9,7 @@ class ButtonTemplate {
       //padding: new EdgeInsets.only(left: 20, right: 20),
       onPressed: onTap,
       color: new Color(backgroundColor),
-      textColor: new Color(textColor),
+      textColor: Colors.white,
       child: Text(text,
           style: TextStyle(fontSize: 18)),
     );

@@ -114,7 +114,7 @@ class SearchPeopleState extends State<SearchPeople> {
           children: <Widget>[new Text(client.getParameterByString("name") + " " + client.getParameterByString("lname"), style: new TextStyle(fontSize: 20), textAlign: TextAlign.left,)],
         ),
         onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => ClientInfoScreen(client: client, issuer: this.issuer, issuerPowers: this.issuerPowers,)));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => ClientInfo(client: client, issuer: this.issuer, issuerPowers: this.issuerPowers,)));
         },
       ),
       [10,10,10,10],
@@ -147,7 +147,7 @@ class SearchPeopleState extends State<SearchPeople> {
 
   Widget _buildShowResults(){
     return new ListView(
-      padding: new EdgeInsets.only(left: 30, right: 30, top: 50, bottom: 40),
+      padding: new EdgeInsets.only(left: 30, right: 30, top: 50, bottom: 100),
       children: <Widget>[
         this._buildSearchBar(),
         this._buildSearchButton(),

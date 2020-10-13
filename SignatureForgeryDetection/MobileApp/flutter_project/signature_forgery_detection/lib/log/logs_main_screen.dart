@@ -10,9 +10,21 @@ import 'package:signature_forgery_detection/models/log.dart';
 import 'package:signature_forgery_detection/templates/container_template.dart';
 import 'package:signature_forgery_detection/templates/button_template.dart';
 import 'package:signature_forgery_detection/templates/dialog_template.dart';
+import 'package:signature_forgery_detection/templates/navbar_template.dart';
 
 // Bakckend
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+class LogScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return NavBarTemplate.buildAppBar(
+      context,
+      'Records',
+      new MainLogScreen(),
+    );
+  }
+}
 
 class MainLogScreen extends StatefulWidget {
   MainLogScreen({Key key}) : super(key: key);
@@ -200,36 +212,8 @@ class MainLogScreenState extends State<MainLogScreen> {
     );
   }
 
-  Widget buildNavBar(){
-    return new Scaffold(
-      appBar: new AppBar(
-        leading: new IconButton (
-          color: Colors.black,
-          onPressed: () => Navigator.of(context).pop(),
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-        ),
-        backgroundColor: Colors.transparent,
-        flexibleSpace: Container(
-          decoration: new BoxDecoration(
-            gradient: new LinearGradient(
-                colors: [
-                  const Color(0x003949AB),
-                  const Color(0xFF3949AB),
-                ],
-                begin: const FractionalOffset(0.0, 0.0),
-                end: const FractionalOffset(1.0, 0.0),
-                stops: [0.0, 1.0],
-                tileMode: TileMode.clamp),
-          ),
-        ),
-        title: Text('Records', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
-      ),
-      body: this._buildShowResults(),//this._screens[this._pageIndex],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return this.buildNavBar();
+    return this._buildShowResults();
   }
 }

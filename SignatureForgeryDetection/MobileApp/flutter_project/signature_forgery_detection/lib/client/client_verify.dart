@@ -1,34 +1,30 @@
 // Basic
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 
 // Models
 import 'package:signature_forgery_detection/models/client.dart';
+import 'package:signature_forgery_detection/models/airesponse.dart';
 
 // Templates
 import 'package:signature_forgery_detection/templates/container_template.dart';
 import 'package:signature_forgery_detection/templates/image_handler.dart';
+import 'package:signature_forgery_detection/templates/dialog_template.dart';
 
-class ClientVerifyScreen extends StatelessWidget{
+// Backend
+import 'package:signature_forgery_detection/backend/aihttp.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+class ClientVerifyScreen extends StatefulWidget{
   final Client client;
   final String issuer;
   ClientVerifyScreen({Key key, @required this.client, @required this.issuer});
 
-  @override
-  Widget build(BuildContext context) {
-    return ClientVerify(client: this.client, issuer: this.issuer,);
-  }
-}
-
-class ClientVerify extends StatefulWidget{
-  final Client client;
-  final String issuer;
-  ClientVerify({Key key, @required this.client, @required this.issuer});
-
   ClientVerifyState createState() => ClientVerifyState(client: this.client, issuer: this.issuer);
 }
 
-class ClientVerifyState extends State<ClientVerify>{
+class ClientVerifyState extends State<ClientVerifyScreen>{
   final Client client;
   final String issuer;
   ClientVerifyState({Key key, @required this.client, @required this.issuer});
@@ -37,12 +33,14 @@ class ClientVerifyState extends State<ClientVerify>{
   bool _signer_signatureClassification = false;
   final _formkey = GlobalKey<FormState>();
 
-  final int _iconLabelColor = 0xff6F74DD;
+  final int _iconLabelColor = 0xFF002FD3;
   final int _borderColor = 0xff856fdd;
   final int _borderoFocusColor = 0xff5436cf;
 
   File _signature;
+  File _pivot;
   var icons = [Icons.scanner, Icons.all_out, Icons.assignment];
+  var _models = [];
 
   Widget powerSwitch(String text, int boolOption){
     return new Padding(
@@ -56,9 +54,24 @@ class ClientVerifyState extends State<ClientVerify>{
         trailing: Switch(
           value: (boolOption == 0)? this._siameseNetwork : (boolOption == 1)? this._convolutionalClassification : this._signer_signatureClassification,
           onChanged: (value){
-            if(boolOption == 0) this._siameseNetwork = value;
-            else if(boolOption == 1) this._convolutionalClassification = value;
-            else this._signer_signatureClassification = value;
+            if(boolOption == 0){
+              this._siameseNetwork = value;
+              if(value) _models.add(3);
+              else {
+                _models.remove(3);
+                this._pivot = null;
+              }
+            }
+            else if(boolOption == 1) {
+              this._convolutionalClassification = value;
+              if(value) _models.add(1);
+              else _models.remove(1);
+            }
+            else {
+              this._signer_signatureClassification = value;
+              if(value) _models.add(2);
+              else _models.remove(2);
+            }
             setState(() {
 
             });
@@ -70,7 +83,7 @@ class ClientVerifyState extends State<ClientVerify>{
     );
   }
 
-  Widget _buildSignatureSelection(){
+  Widget _buildSignatureSelection(bool isPivot){
     return new Padding(padding: EdgeInsets.only(left: 5, right: 5),
       child: new Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -81,7 +94,8 @@ class ClientVerifyState extends State<ClientVerify>{
             ),
             //padding: new EdgeInsets.only(left: 20, right: 20),
             onPressed: () async {
-              this._signature = await ImageHandler.getImage(0);
+              if(isPivot) this._pivot = await ImageHandler.getImage(0);
+              else this._signature = await ImageHandler.getImage(0);
               setState(() {});
             },
             color: new Color(0xFF002FD3),
@@ -95,7 +109,16 @@ class ClientVerifyState extends State<ClientVerify>{
             ),
             //padding: new EdgeInsets.only(left: 20, right: 20),
             onPressed: () async {
-              this._signature = await ImageHandler.getImage(1);
+              FilePickerResult result = await FilePicker.platform.pickFiles(
+                  type: FileType.custom,
+                allowedExtensions: ['jpg', 'png', 'jpeg']
+              );
+
+              if(result != null) {
+                if(isPivot) this._pivot = File(result.files.single.path);
+                else this._signature = File(result.files.single.path);
+              }
+
               setState(() {});
             },
             color: new Color(0xFF002FD3),
@@ -108,6 +131,30 @@ class ClientVerifyState extends State<ClientVerify>{
     );
   }
 
+  // Alerts
+  void _showResult(BuildContext context, String text) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: new ListTile(
+            leading: new Icon(Icons.info, size: 45, color: Colors.blue,),
+            title: new Text("Notice", style: new TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
+          ),
+          content: new Text(text),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("Ok"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildVerifyButton(){
     return new Padding(padding: EdgeInsets.only(left: 30, right: 30, bottom: 20),
       child: RaisedButton(
@@ -115,8 +162,46 @@ class ClientVerifyState extends State<ClientVerify>{
           borderRadius: BorderRadius.circular(30.0),
         ),
         //padding: new EdgeInsets.only(left: 20, right: 20),
-        onPressed: () {
-          // Send image
+        onPressed: () async {
+          if(this._signature == null){
+            DialogTemplate.showMessage(context, "Please, select a signature to verify");
+          }
+          else if(!this._convolutionalClassification && !this._signer_signatureClassification && !this._siameseNetwork){
+            DialogTemplate.showMessage(context, "Please, select a model to verify a signature");
+          }
+          else if(this._siameseNetwork && (this._pivot == null)){
+            DialogTemplate.showMessage(context, "Please, select a pivot signature.");
+          }
+          else {
+            // All good
+            String aiserver_link = "";
+            final CollectionReference misc = FirebaseFirestore.instance.collection('miscellaneous');
+            await misc.doc("aiserver").get().then((
+                snapshot) {
+              if(snapshot.exists) {
+                aiserver_link = snapshot.get("server");
+              }
+            });
+
+            DialogTemplate.initLoader(context, "Please, wait for a moment...");
+            AIResponse response = await AIHTTPRequest.predictRequest(aiserver_link, this.client.getUID(), this._models, this._signature, this._pivot, true);
+            DialogTemplate.terminateLoader();
+
+            // Conv model results
+            String cm_results = "";
+            String ss_results = "";
+            String sm_results = "";
+            if(response.getModelFlag("conv")) cm_results = "\n\nThe Convolutional Model estimates that the signature is " + response.getConvPred()[0]
+                + ".\nThe signer was classified " + response.getConvPred()[1] + "ly.";
+            if(response.getModelFlag("ss")) ss_results = "\n\nThe Signer-Signature Model estimates that the signature is " + response.getSSPred()[1]
+                + ".\nAlso, it classified the signer " + response.getSSPred()[0] + "ly.";
+            if(response.getModelFlag("siamese")) sm_results = "\n\nThe Siamese Model estimates that the signature is " + response.getSiamesePred() + ".";
+
+            String total_text = "Results:" + cm_results + ss_results + sm_results;
+
+            // Show results
+            this._showResult(context, total_text);
+          }
         },
         color: new Color(0xFF002FD3),
         textColor: Colors.white,
@@ -134,16 +219,35 @@ class ClientVerifyState extends State<ClientVerify>{
           ContainerTemplate.buildContainer(
               new Column(
                 children: <Widget>[
-                  ContainerTemplate.buildContainer(new Padding(padding: EdgeInsets.only(left: 10, top: 5, bottom: 5), child: this.powerSwitch("Siamese Network", 0),), [15, 15, 15, 15], 10, 5, 5, 0.15, 10),
-                  ContainerTemplate.buildContainer(new Padding(padding: EdgeInsets.only(left: 10, top: 5, bottom: 5), child: this.powerSwitch("Convolution Classification", 1),), [15, 15, 15, 15], 10, 5, 5, 0.15, 10),
-                  ContainerTemplate.buildContainer(new Padding(padding: EdgeInsets.only(left: 10, top: 5, bottom: 5), child: this.powerSwitch("Signer Signature Classification", 2),), [15, 15, 15, 15], 10, 5, 5, 0.15, 10),
-                  //ContainerTemplate.buildContainer(new Padding(padding: EdgeInsets.only(left: 10, top: 5, bottom: 5), child: FormTemplate.buildSingleTextInput(this._scheduleInit, "Schedule", Icons.schedule, this._iconLabelColor, this._borderColor, this._borderoFocusColor, true, false),), [15, 15, 15, 15], 10, 5, 5, 0.15, 10),
-                  this._buildSignatureSelection(),
+                  ContainerTemplate.buildContainer(new Padding(padding: EdgeInsets.only(left: 10, top: 5, bottom: 5), child: this.powerSwitch("Convolution Classification Model", 1),), [15, 15, 15, 15], 10, 5, 5, 0.15, 10),
+                  ContainerTemplate.buildContainer(new Padding(padding: EdgeInsets.only(left: 10, top: 5, bottom: 5), child: this.powerSwitch("Signer Signature Classification Model", 2),), [15, 15, 15, 15], 10, 5, 5, 0.15, 10),
+                  ContainerTemplate.buildContainer(new Padding(padding: EdgeInsets.only(left: 10, top: 5, bottom: 5), child: this.powerSwitch("Siamese Network Model", 0),), [15, 15, 15, 15], 10, 5, 5, 0.15, 10),
+                  new Padding(
+                    padding: EdgeInsets.only(bottom: 10, top: 5),
+                    child: new Text("Select Signature", style: new TextStyle(fontWeight: FontWeight.bold, fontSize: 28), textAlign: TextAlign.center,),
+                  ),
+                  this._buildSignatureSelection(false),
                   new Container(
                     padding: new EdgeInsets.all(30),
                     child: (_signature == null)? null : Image.file(this._signature),
                   ),
-                  this._buildVerifyButton()
+                  Visibility(
+                    visible: this._siameseNetwork,
+                    child: new Column(
+                      children: <Widget>[
+                        new Padding(
+                          padding: EdgeInsets.only(bottom: 10, top: 5),
+                          child: new Text("Select Pivot Signature", style: new TextStyle(fontWeight: FontWeight.bold, fontSize: 28), textAlign: TextAlign.center,),
+                        ),
+                        this._buildSignatureSelection(true),
+                        new Container(
+                          padding: new EdgeInsets.all(30),
+                          child: (this._pivot == null)? null : Image.file(this._pivot),
+                        ),
+                      ],
+                    ),
+                  ),
+                  this._buildVerifyButton(),
                 ],
               ),
               [20, 20, 20, 40], 15,
@@ -157,32 +261,7 @@ class ClientVerifyState extends State<ClientVerify>{
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
-    return new Scaffold(
-      appBar: new AppBar(
-        leading: new IconButton (
-          color: Colors.black,
-          onPressed: () => Navigator.of(context).pop(),
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-        ),
-        backgroundColor: Colors.transparent,
-        flexibleSpace: Container(
-          decoration: new BoxDecoration(
-            gradient: new LinearGradient(
-                colors: [
-                  const Color(0x003949AB),
-                  const Color(0xFF3949AB),
-                ],
-                begin: const FractionalOffset(0.0, 0.0),
-                end: const FractionalOffset(1.0, 0.0),
-                stops: [0.0, 1.0],
-                tileMode: TileMode.clamp),
-          ),
-        ),
-        title: Text('Verify Signature', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
-      ),
-      body: this._buildAiForm(),
-    );
+    return this._buildAiForm();
   }
 }
 

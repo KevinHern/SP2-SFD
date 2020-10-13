@@ -8,6 +8,7 @@ import 'package:signature_forgery_detection/models/log.dart';
 import 'package:signature_forgery_detection/templates/container_template.dart';
 import 'package:signature_forgery_detection/templates/button_template.dart';
 import 'package:signature_forgery_detection/templates/dialog_template.dart';
+import 'package:signature_forgery_detection/templates/navbar_template.dart';
 
 // Backend
 import 'package:signature_forgery_detection/backend/log_query.dart';
@@ -19,7 +20,11 @@ class LogInfoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LogInfo(log: this.log);
+    return NavBarTemplate.buildAppBar(
+      context,
+      'Record Details',
+      LogInfo(log: this.log),
+    );
   }
 }
 
@@ -153,30 +158,6 @@ class LogInfoState extends State<LogInfo> {
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-      appBar: new AppBar(
-        leading: new IconButton (
-          color: Colors.black,
-          onPressed: () => Navigator.of(context).pop(),
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-        ),
-        backgroundColor: Colors.transparent,
-        flexibleSpace: Container(
-          decoration: new BoxDecoration(
-            gradient: new LinearGradient(
-                colors: [
-                  const Color(0x003949AB),
-                  const Color(0xFF3949AB),
-                ],
-                begin: const FractionalOffset(0.0, 0.0),
-                end: const FractionalOffset(1.0, 0.0),
-                stops: [0.0, 1.0],
-                tileMode: TileMode.clamp),
-          ),
-        ),
-        title: Text('Information', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
-      ),
-      body: this._buildLogInfo(),//
-    );
+    return this._buildLogInfo();
   }
 }

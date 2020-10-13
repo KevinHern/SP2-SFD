@@ -8,12 +8,13 @@ import 'package:signature_forgery_detection/templates/container_template.dart';
 import 'package:signature_forgery_detection/templates/dialog_template.dart';
 import 'package:signature_forgery_detection/templates/form_template.dart';
 import 'package:signature_forgery_detection/templates/image_handler.dart';
+import 'package:file_picker/file_picker.dart';
 
 // Backend
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:signature_forgery_detection/backend/log_query.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:signature_forgery_detection/backend/aihttp.dart';
 
 class RegisterClient extends StatefulWidget {
   final String issuer;
@@ -29,7 +30,7 @@ class RegisterClientState extends State<RegisterClient> {
   final TextEditingController _phone = new TextEditingController();
   final TextEditingController _birthday = new TextEditingController(text: "1/1/2000");
   final registrationDate = "${DateTime.parse(new DateTime.now().toString()).day}/${DateTime.parse(new DateTime.now().toString()).month}/${DateTime.parse(new DateTime.now().toString()).year}";
-  final int _iconLabelColor = 0xff6F74DD;
+  final int _iconLabelColor = 0xFF002FD3;
   final int _borderColor = 0xff856fdd;
   final int _borderoFocusColor = 0xff5436cf;
 
@@ -47,11 +48,11 @@ class RegisterClientState extends State<RegisterClient> {
         ),
         //padding: new EdgeInsets.only(left: 20, right: 20),
         onPressed: () async {
-          DialogTemplate.initLoader(context, "Espera un momento...");
           User user = FirebaseAuth.instance.currentUser;
           if(user != null && _formkey.currentState.validate()) {
             final clients = FirebaseFirestore.instance.collection("clients");
             // Return and set the updated "likes" count from the transaction
+            DialogTemplate.initLoader(context, "Espera un momento...");
             int newClientId = await FirebaseFirestore.instance
                 .runTransaction<int>((transaction) async {
               final doc = FirebaseFirestore.instance.collection("sequentials").doc("clientseq");
@@ -76,15 +77,28 @@ class RegisterClientState extends State<RegisterClient> {
                 'phone': _phone.text,
                 'birthday': _birthday.text,
                 'registration': registrationDate,
+                'aimodel': false,
+                'sigindex': this.signatures.length + 1
               });
 
-              StorageReference storageReference = FirebaseStorage.instance
-                  .ref();
-                  //.child('chats/${Path.basename(_image.path)}}');
+              // Getting IMG server link
+              String aiserver_link = "";
+              final CollectionReference misc = FirebaseFirestore.instance.collection('miscellaneous');
+              await misc.doc("imgserver").get().then((
+                  snapshot) {
+                if(snapshot.exists) {
+                  aiserver_link = snapshot.get("server");
+                }
+              });
+
+              // Uploading each signature
               for(int i = 0; i < this.signatures.length; i++){
                 String filename = "signature" + (i+1).toString() + "." + this.signatures[i].path.split('/').last.split('.').last;
-                StorageUploadTask uploadTask = storageReference.child("clients/" + newClientId.toString() + "/" + filename).putFile(this.signatures[i]);
-                await uploadTask.onComplete;
+
+                while (true){
+                  bool success = await AIHTTPRequest.storeRequest(aiserver_link, newClientId.toString(), filename, this.signatures[i], true);
+                  if (success) break;
+                }
               }
 
               int logCode = await (new QueryLog()).pushLog(
@@ -106,11 +120,9 @@ class RegisterClientState extends State<RegisterClient> {
 
           }
           else if(user == null){
-            DialogTemplate.terminateLoader();
             DialogTemplate.showMessage(context, "A fatal error has occurred, restart the application.");
           }
           else {
-            DialogTemplate.terminateLoader();
             DialogTemplate.showMessage(context, "Input the data correctly");
           }
         },
@@ -128,12 +140,8 @@ class RegisterClientState extends State<RegisterClient> {
       child: new Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
-          RaisedButton(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30.0),
-            ),
-            //padding: new EdgeInsets.only(left: 20, right: 20),
-            onPressed: () async {
+          ContainerTemplate.buildBasicButton(
+            () async {
               if(this.signatures.length > 4) DialogTemplate.showMessage(context, "No more than 5 signatures allowed");
               else{
                 File signature = await ImageHandler.getImage(0);
@@ -141,28 +149,30 @@ class RegisterClientState extends State<RegisterClient> {
                 setState(() {});
               }
             },
-            color: new Color(0xFF002FD3),
-            textColor: Colors.white,
-            child: Text("Signature\nfrom Camera",
-                style: TextStyle(fontSize: font_size), textAlign: TextAlign.center),
-          ),
-          RaisedButton(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30.0),
+            Text("Signature\nfrom Camera",
+                style: TextStyle(fontSize: font_size), textAlign: TextAlign.center
             ),
-            //padding: new EdgeInsets.only(left: 20, right: 20),
-            onPressed: () async {
-              if(this.signatures.length > 4) DialogTemplate.showMessage(context, "No more than 5 signatures allowed");
-              else{
-                File signature = await ImageHandler.getImage(1);
-                if(signature != null) this.signatures.add(signature);
-                setState(() {});
+          ),
+          ContainerTemplate.buildBasicButton(
+            () async {
+              if (this.signatures.length > 10)
+                DialogTemplate.showMessage(
+                    context, "No more than 10 signatures allowed");
+              else {
+                FilePickerResult result = await FilePicker.platform.pickFiles(
+                    type: FileType.custom,
+                    allowedExtensions: ['jpg', 'png', 'jpeg']
+                );
+
+                if(result != null) {
+                  this.signatures.add(File(result.files.single.path));
+                }
               }
+              setState(() {});
             },
-            color: new Color(0xFF002FD3),
-            textColor: Colors.white,
-            child: Text("Signature\nfrom Gallery",
-                style: TextStyle(fontSize: font_size), textAlign: TextAlign.center),
+            Text("Signature\nfrom Gallery",
+                style: TextStyle(fontSize: font_size), textAlign: TextAlign.center,
+            ),
           ),
         ],
       )
@@ -212,26 +222,18 @@ class RegisterClientState extends State<RegisterClient> {
   }
 
   Widget _buildClearButton(){
-    final double font_size = 15;
-    return new Padding(padding: EdgeInsets.only(left: 30, right: 30),
-        child: RaisedButton(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30.0),
-          ),
-          //padding: new EdgeInsets.only(left: 20, right: 20),
-          onPressed: () {
-            this._emailController.text = "";
-            this._nameController.text = "";
-            this._lastnameController.text = "";
-            this._phone.text = "";
-            this._birthday.text = "";
-            this.signatures = [];
-            setState(() {});
-          },
-          color: new Color(0xFF002FD3),
-          textColor: Colors.white,
-          child: Text("Clear Form",
-              style: TextStyle(fontSize: font_size), textAlign: TextAlign.center),
+    return ContainerTemplate.buildBasicButton(
+      () {
+        this._emailController.text = "";
+        this._nameController.text = "";
+        this._lastnameController.text = "";
+        this._phone.text = "";
+        this._birthday.text = "";
+        this.signatures = [];
+        setState(() {});
+      },
+        Text("Clear Form",
+          style: TextStyle(fontSize: 18)
         ),
     );
   }

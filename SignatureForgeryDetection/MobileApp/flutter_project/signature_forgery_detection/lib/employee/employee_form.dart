@@ -33,7 +33,7 @@ class RegisterEmployeeState extends State<RegisterEmployee> {
   final TextEditingController _scheduleEnd = new TextEditingController();
   bool _hasPowers = false;
 
-  final int _iconLabelColor = 0xff6F74DD;
+  final int _iconLabelColor = 0xFF002FD3;
   final int _borderColor = 0xff856fdd;
   final int _borderoFocusColor = 0xff5436cf;
 
@@ -132,7 +132,7 @@ class RegisterEmployeeState extends State<RegisterEmployee> {
   }
 
   Widget __buildRegisterButton(){
-    return new Padding(padding: EdgeInsets.only(left: 30, right: 30, bottom: 20),
+    return new Padding(padding: EdgeInsets.only(left: 30, right: 30),
       child: RaisedButton(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(30.0),
@@ -203,6 +203,25 @@ class RegisterEmployeeState extends State<RegisterEmployee> {
       ),
     );
   }
+  Widget _buildClearButton(){
+    return ContainerTemplate.buildBasicButton(
+      () {
+        this._emailController.text = "";
+        this._nameController.text = "";
+        this._lastnameController.text = "";
+        this._phone.text = "";
+        this._birthday.text = "";
+        this._department.text = "";
+        this._position.text = "";
+        this._scheduleInit.text = "";
+        this._scheduleEnd.text = "";
+        this._hasPowers = false;
+        this.signatures = [];
+        setState(() {});
+      },
+      new Text("Clear Form", style: new TextStyle(fontSize: 18),),
+    );
+  }
 
   Widget powerSwitch(){
     return new Padding(
@@ -228,36 +247,6 @@ class RegisterEmployeeState extends State<RegisterEmployee> {
     );
   }
 
-  Widget _buildClearButton(){
-    final double font_size = 15;
-    return new Padding(padding: EdgeInsets.only(left: 30, right: 30),
-      child: RaisedButton(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30.0),
-        ),
-        //padding: new EdgeInsets.only(left: 20, right: 20),
-        onPressed: () {
-          this._emailController.text = "";
-          this._nameController.text = "";
-          this._lastnameController.text = "";
-          this._phone.text = "";
-          this._birthday.text = "";
-          this._department.text = "";
-          this._position.text = "";
-          this._scheduleInit.text = "";
-          this._scheduleEnd.text = "";
-          this._hasPowers = false;
-          this.signatures = [];
-          setState(() {});
-        },
-        color: new Color(0xFF002FD3),
-        textColor: Colors.white,
-        child: Text("Clear Form",
-            style: TextStyle(fontSize: font_size), textAlign: TextAlign.center),
-      ),
-    );
-  }
-
   Widget _buildForm(){
     return new Form(
       child: new ListView(
@@ -277,8 +266,8 @@ class RegisterEmployeeState extends State<RegisterEmployee> {
                   ContainerTemplate.buildContainer(new Padding(padding: EdgeInsets.only(left: 10, top: 5, bottom: 5), child: FormTemplate.buildTimeInput(this._scheduleEnd, "Schedule (End)", Icons.schedule, this._iconLabelColor, this._borderColor, this._borderoFocusColor, "sc2", context),), [15, 15, 15, 15], 10, 5, 5, 0.15, 10),
                   ContainerTemplate.buildContainer(new Padding(padding: EdgeInsets.only(left: 10, top: 5, bottom: 5), child: this.powerSwitch(),), [15, 15, 15, 15], 10, 5, 5, 0.15, 10),
                   //ContainerTemplate.buildContainer(new Padding(padding: EdgeInsets.only(left: 10, top: 5, bottom: 5), child: FormTemplate.buildSingleTextInput(this._scheduleInit, "Schedule", Icons.schedule, this._iconLabelColor, this._borderColor, this._borderoFocusColor, true, false),), [15, 15, 15, 15], 10, 5, 5, 0.15, 10),
-                  this.__buildRegisterSignatureButton(),
-                  this._buildSignatureList(),
+                  //this.__buildRegisterSignatureButton(),
+                  //this._buildSignatureList(),
                   this.__buildRegisterButton(),
                   this._buildClearButton(),
                 ],

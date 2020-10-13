@@ -1,13 +1,26 @@
 // Basic Imports
 import 'package:flutter/material.dart';
-import 'package:signature_forgery_detection/models/client.dart';
 
 // Routes
 import 'package:signature_forgery_detection/client/client_edit.dart';
 import 'package:signature_forgery_detection/client/client_verify.dart';
+import 'package:signature_forgery_detection/ai/ai_signature_model.dart';
+import 'package:signature_forgery_detection/client/signatures/client_signatures.dart';
+import 'package:signature_forgery_detection/client/signatures/client_more_signatures.dart';
+
+// Models
+import 'package:signature_forgery_detection/models/client.dart';
+import 'package:signature_forgery_detection/models/navbar.dart';
 
 // Templates
 import 'package:signature_forgery_detection/templates/container_template.dart';
+import 'package:signature_forgery_detection/templates/dialog_template.dart';
+import 'package:signature_forgery_detection/templates/fade_template.dart';
+import 'package:signature_forgery_detection/templates/navbar_template.dart';
+
+// Backend
+import 'package:signature_forgery_detection/backend/aihttp.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ClientInfoScreen extends StatelessWidget {
   final Client client;
@@ -30,25 +43,29 @@ class ClientInfo extends StatefulWidget {
   ClientInfoState createState() => ClientInfoState(client: this.client, issuer: this.issuer, issuerPowers: this.issuerPowers);
 }
 
-class ClientInfoState extends State<ClientInfo> {
+class ClientInfoState extends State<ClientInfo> with SingleTickerProviderStateMixin {
   final Client client;
   final String issuer;
   final bool issuerPowers;
+  NavBar navBar;
+  FadeAnimation _fadeAnimation;
 
   ClientInfoState({Key key, @required this.client, @required this.issuer, @required this.issuerPowers});
 
-  final Color _iconColor = new Color(0xff6F74DD).withOpacity(0.60);
+  final Color _iconColor = new Color(0xFF002FD3).withOpacity(0.60);
   final List<Widget> _settingsBtns = [];
   List<Widget> _clientInfo = [];
 
   @override
   void initState() {
     super.initState();
+    this.navBar = new NavBar(1, 1);
+    this._fadeAnimation = new FadeAnimation(this);
     for(int i = 0; i < this.client.getTotalRealParameters(); i++) {
       // Add EDIT functionality
       this._settingsBtns.add(
           new IconButton(
-            icon: new Icon(Icons.edit, color: new Color(0x6F74DD).withOpacity(0.60),),
+            icon: new Icon(Icons.edit, color: this._iconColor,),
             onPressed: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => ClientEditScreen(client: this.client, option: i, issuer: this.issuer))).then((value) => setState(() {}));
             },
@@ -66,39 +83,12 @@ class ClientInfoState extends State<ClientInfo> {
     );
   }
 
-  // Alerts
-  void _showResult(BuildContext context, bool legit) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: new ListTile(
-              leading: legit? new Icon(Icons.check_circle, size: 45, color: Colors.green,) : new Icon(Icons.warning, size: 40, color: Colors.red,),
-              title: new Text("Notice", style: new TextStyle(fontWeight: FontWeight.bold, fontSize: 25),),
-          ),
-          content: legit?
-          new Text("The system has determined that the signature has a high probability of being legit.")
-              : new Text("Signature has been verified and seems to be forged."),
-          actions: <Widget>[
-            FlatButton(
-              child: Text("Ok"),
-              onPressed: () {
-                //Put your code here which you want to execute on Yes button click.
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Widget _profileInfo(){
     return new ListView.separated(
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       separatorBuilder: (context, index) => Padding(
-        padding: EdgeInsets.only(left: 66, right: 20),
+        padding: EdgeInsets.only(left: 20, right: 20),
         child: Divider(
           color: new Color(0x000000).withOpacity(0.15),
           thickness: 1,
@@ -112,80 +102,7 @@ class ClientInfoState extends State<ClientInfo> {
     );
   }
 
-  Widget _buildVerifyButton() {
-    return new Padding(padding: EdgeInsets.only(left: 30, right: 30),
-      child: RaisedButton(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30.0),
-        ),
-        //padding: new EdgeInsets.only(left: 20, right: 20),
-        onPressed: () {
-          // Open camera, send picture and show result
-          // this._showResult(context, true);
-          Navigator.push(context, MaterialPageRoute(builder: (context) => ClientVerifyScreen(client: this.client, issuer: this.issuer))).then((value) => setState(() {}));
-        },
-        color: new Color(0xFF002FD3),
-        textColor: Colors.white,
-        child: Text("Verify Signature",
-            style: TextStyle(fontSize: 18)),
-      ),
-    );
-  }
-
   Widget _profile(){
-    return new ListView(
-      padding: EdgeInsets.only(top: 20, bottom: 30),
-      children: <Widget>[
-        new Text(
-          this.client.getParameterByString("name"),
-          style: new TextStyle(
-            fontSize: 20,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        new Text(
-        this.client.getParameterByString("lname"),
-          style: new TextStyle(
-              fontSize: 16,
-              color: new Color(0x000000).withOpacity(0.50)
-          ),
-          textAlign: TextAlign.center,
-        ),
-        new Stack(
-          children: <Widget>[
-            ContainerTemplate.buildContainer(
-              this._profileInfo(),
-              [30, 10, 30, 20],
-              20,
-              15,
-              15,
-              0.15,
-              30,
-            ),
-            new Positioned(
-              top: 0,
-              right: 0,
-              child: new Padding(
-                padding: EdgeInsets.only(right: 8),
-                child: new FloatingActionButton(
-                  elevation: 10,
-                  hoverElevation: 10,
-                  backgroundColor: Colors.red,
-                  child: this._settingsBtns[this.client.getTotalRealParameters()],
-                  mini: true,
-                ),
-              ),
-            ),
-          ],
-        ),
-        this._buildVerifyButton(),
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-
     // Add INFO list Tile
     // Email
     this._clientInfo = [];
@@ -230,48 +147,138 @@ class ClientInfoState extends State<ClientInfo> {
       ),
     );
 
-    this._clientInfo.add(
-        new Padding(padding: EdgeInsets.only(left: 30, right: 30),
-          child: RaisedButton(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30.0),
+    return new ListView(
+      padding: EdgeInsets.only(top: 50, bottom: 30),
+      shrinkWrap: true,
+      children: <Widget>[
+        new Text(
+          this.client.getParameterByString("name"),
+          style: new TextStyle(
+            fontSize: 20,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        new Text(
+        this.client.getParameterByString("lname"),
+          style: new TextStyle(
+              fontSize: 16,
+              color: new Color(0x000000).withOpacity(0.50)
+          ),
+          textAlign: TextAlign.center,
+        ),
+        new Stack(
+          children: <Widget>[
+            ContainerTemplate.buildContainer(
+              this._profileInfo(),
+              [30, 10, 30, 20],
+              20,
+              15,
+              15,
+              0.15,
+              30,
             ),
-            //padding: new EdgeInsets.only(left: 20, right: 20),
-            onPressed: () {
-
-            },
-            color: new Color(0xFF002FD3),
-            textColor: Colors.white,
-            child: Text("Check Signatures",
-                style: TextStyle(fontSize: 18)),
-          ),
-        )
+            new Positioned(
+              top: 0,
+              right: 0,
+              child: new Padding(
+                padding: EdgeInsets.only(right: 8),
+                child: new FloatingActionButton(
+                  elevation: 10,
+                  hoverElevation: 10,
+                  backgroundColor: Colors.red,
+                  child: this._settingsBtns[this.client.getTotalRealParameters()],
+                  mini: true,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
+  }
 
-    return new Scaffold(
-      appBar: new AppBar(
-        leading: new IconButton (
-          color: Colors.black,
-          onPressed: () => Navigator.of(context).pop(),
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-        ),
-        backgroundColor: Colors.transparent,
-        flexibleSpace: Container(
-          decoration: new BoxDecoration(
-            gradient: new LinearGradient(
-                colors: [
-                  const Color(0x003949AB),
-                  const Color(0xFF3949AB),
-                ],
-                begin: const FractionalOffset(0.0, 0.0),
-                end: const FractionalOffset(1.0, 0.0),
-                stops: [0.0, 1.0],
-                tileMode: TileMode.clamp),
+  Widget manyOptionsScreen() {
+    return new Center(
+      child: ListView(
+        shrinkWrap: true,
+        children: <Widget>[
+          ContainerTemplate.buildTileOption(
+            Icons.folder,
+            "Check\nSignatures",
+            () async {
+              String imgserver_link = "";
+              DialogTemplate.initLoader(context, "Please, wait for a moment...");
+              final CollectionReference misc = FirebaseFirestore.instance.collection('miscellaneous');
+              await misc.doc("imgserver").get().then((
+                  snapshot) {
+                if(snapshot.exists) {
+                  imgserver_link = snapshot.get("server");
+                }
+              });
+              var signames = await AIHTTPRequest.imagesRequest(imgserver_link, this.client.getUID(), true);
+              DialogTemplate.terminateLoader();
+
+              if (signames == null) DialogTemplate.showMessage(context, "The user does not have any registered signatures");
+              else Navigator.push(context, MaterialPageRoute(builder: (context) => ClientSignatureScreen(issuer: this.issuer, client: this.client, signames: signames))).then((value) => setState(() {}));
+            },
           ),
-        ),
-        title: Text('Client Information', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+          ContainerTemplate.buildTileOption(
+            Icons.note_add,
+            "Add\nSignatures",
+            () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => ClientMoreSignaturesScreen(issuer: this.issuer, client: this.client))).then((value) => setState(() {}));
+            },
+          ),
+          ContainerTemplate.buildTileOption(
+              Icons.android,
+              "Check\nAI Model",
+              () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => AIMainClientScreen(client: this.client, issuer: this.issuer,)));
+              }
+          ),
+        ],
       ),
-      body: this._profile(),//this._screens[this._pageIndex],
+    );
+  }
+
+  Widget returnScreen() {
+    switch(this.navBar.getPageIndex()) {
+      case 0:
+        return this.manyOptionsScreen();
+      case 1:
+        return this._profile();
+      case 2:
+        return new ClientVerifyScreen(client: this.client, issuer: this.issuer);
+      default:
+        return new Container();
+    }
+  }
+
+  void navOnTap(index){
+    setState(() {
+      this.navBar.setBoth(index);
+      this.navBar.setOnMainScreen(index == 1);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NavBarTemplate.buildBottomNavBar(
+      this.navBar,
+      NavBarTemplate.buildTripletItems([Icons.assignment, Icons.search], ["Menu", "Verify"]),
+      navOnTap,
+      NavBarTemplate.buildFAB(
+        this.navBar.isOnMainScreen()? Icons.home : Icons.keyboard_return,
+            () {
+          if(this.navBar.isOnMainScreen()) Navigator.of(context).pop();
+          else setState(() {
+            this.navBar.setBoth(1);
+            this.navBar.setOnMainScreen(true);
+          });
+        },
+        "client_information_fab"
+      ),
+      this._fadeAnimation.fadeNow(this.returnScreen()),
     );
   }
 }

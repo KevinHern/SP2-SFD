@@ -6,8 +6,11 @@ import 'package:signature_forgery_detection/models/employee.dart';
 
 // Templates
 import 'package:signature_forgery_detection/templates/container_template.dart';
+import 'package:signature_forgery_detection/templates/fade_template.dart';
 import 'package:signature_forgery_detection/templates/form_template.dart';
 import 'package:signature_forgery_detection/templates/dialog_template.dart';
+import 'package:signature_forgery_detection/templates/navbar_template.dart';
+import 'package:signature_forgery_detection/templates/navbar_template.dart';
 
 // Backend
 import 'package:signature_forgery_detection/backend/profile_query.dart';
@@ -33,10 +36,11 @@ class ProfileEdit extends StatefulWidget {
   ProfileEditState createState() => ProfileEditState(employee: this.employee, option: this.option);
 }
 
-class ProfileEditState extends State<ProfileEdit> {
+class ProfileEditState extends State<ProfileEdit> with SingleTickerProviderStateMixin {
   final Employee employee;
   final int option;
-  final int _iconLabelColor = 0xff6F74DD;
+  FadeAnimation _fadeAnimation;
+  final int _iconLabelColor = 0xFF002FD3;
   final int _borderColor = 0xff856fdd;
   final int _borderoFocusColor = 0xff5436cf;
 
@@ -51,6 +55,7 @@ class ProfileEditState extends State<ProfileEdit> {
   @override
   void initState() {
     super.initState();
+    this._fadeAnimation = new FadeAnimation(this);
     switch(this.option) {
       case 0:
         _fieldController1 = new TextEditingController(text: this.employee.getParameterByString("email"));
@@ -147,90 +152,55 @@ class ProfileEditState extends State<ProfileEdit> {
   }
 
   Widget _buildSubmitBtn() {
-    return new Padding(
-      padding: const EdgeInsets.only(left: 16.0, top: 0, bottom: 0, right: 16.0),
-      child: SizedBox(
-        width: double.infinity,
-        child: new RaisedButton(
-          child: new Text("Update Info"),
-          textColor: new Color(0xFFFFFFFF),
-          color: new Color(0xFF0634AA),
-          splashColor: new Color(0xFF001f6e),
-          onPressed: () async {
-            if(_formkey.currentState.validate()){
-              getNewValue();
+    return ContainerTemplate.buildBasicButton(
+          () async {
+        if(_formkey.currentState.validate()){
+          getNewValue();
 
-              DialogTemplate.initLoader(context, "Updating...");
-              int code = await (new QueryProfile()).updateProfileField(this.employee, this.option, this.newValues);
+          DialogTemplate.initLoader(context, "Updating...");
+          int code = await (new QueryProfile()).updateProfileField(this.employee, this.option, this.newValues);
 
 
-              int logCode = await (new QueryLog()).pushLog(
-                  0, " updated his or her information.",
-                  this.employee.getParameterByString("name") + " " + this.employee.getParameterByString("lname"),
-                  '',
-                  this.employee.getUID(),
-                  0, "Updated the " + this._title + " field.", 0
-              );
-              DialogTemplate.terminateLoader();
+          int logCode = await (new QueryLog()).pushLog(
+              0, " updated his or her information.",
+              this.employee.getParameterByString("name") + " " + this.employee.getParameterByString("lname"),
+              '',
+              this.employee.getUID(),
+              0, "Updated the " + this._title + " field.", 0
+          );
+          DialogTemplate.terminateLoader();
 
-              if(logCode == 1) DialogTemplate.showStatusUpdate(context, code);
-              else DialogTemplate.showMessage(context, "Update successful but failed to register a log.");
+          if(logCode == 1) DialogTemplate.showStatusUpdate(context, code);
+          else DialogTemplate.showMessage(context, "Update successful but failed to register a log.");
 
-            }
-            else {
-              DialogTemplate.showFormMessage(context, "Please, fill the form.");
-            }
-          },
-        ),
-      ),
+        }
+        else {
+          DialogTemplate.showFormMessage(context, "Please, fill the form.");
+        }
+      },
+      Text('Update Info',
+          style: TextStyle(fontSize: 18)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return new GestureDetector(
-      onTap: () {
-        FocusScopeNode currentFocus = FocusScope.of(context);
-
-        if (!currentFocus.hasPrimaryFocus) {
-          currentFocus.unfocus();
-        }
-      },
-      child: new Scaffold(
-        appBar: new AppBar(
-          elevation: 0.0,
-          backgroundColor: Colors.transparent,
-          flexibleSpace: Container(
-            decoration: new BoxDecoration(
-              gradient: new LinearGradient(
-                  colors: [
-                    const Color(0x003949AB),
-                    const Color(0xFF3949AB),
-                  ],
-                  begin: const FractionalOffset(0.0, 0.0),
-                  end: const FractionalOffset(1.0, 0.0),
-                  stops: [0.0, 1.0],
-                  tileMode: TileMode.clamp),
-            ),
-          ),
-          title: Text('Update' + this._title, style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
-          leading: new IconButton (
-            color: Colors.black,
-            onPressed: () => Navigator.of(context).pop(),
-            icon: Icon(Icons.arrow_back, color: Colors.black),
-          ),
-        ),
-        body: new SingleChildScrollView(
-          child: new Form(
-            key: _formkey,
-            child: new Column(
-              children: <Widget>[
-                ContainerTemplate.buildContainer(
-                    new Padding(padding: new EdgeInsets.only(right: 5, left: 10, bottom: 5, top: 5), child: this._buildWidgetToShow(),),
-                    [30, 15, 30, 15], 10,
-                    15, 15, 0.15, 30),
-                this._buildSubmitBtn(),
-              ],
+    return NavBarTemplate.buildAppBar(
+      context,
+      'Update ' + this._title,
+      new SingleChildScrollView(
+        child: new Form(
+          key: _formkey,
+          child: this._fadeAnimation.fadeNow(
+            ContainerTemplate.buildContainer(
+              new Column(
+                children: <Widget>[
+                  new Padding(padding: EdgeInsets.only(left: 5, right: 5, top: 5), child: this._buildWidgetToShow(),),
+                  this._buildSubmitBtn(),
+                ],
+              ),
+              [30, 15, 30, 15], 10,
+              15, 15, 0.15, 30,
             ),
           ),
         ),
