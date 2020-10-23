@@ -12,6 +12,7 @@ import '../main_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:signature_forgery_detection/templates/dialog_template.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class LoginScreen extends StatefulWidget {
   LoginScreenState createState() => LoginScreenState();
@@ -100,6 +101,15 @@ class LoginScreenState extends State<LoginScreen> {
         employee.setUID(user.uid);
       }
     });
+    if (employee != null){
+      try{
+        String url = await FirebaseStorage.instance.ref().child("employees/" + employee.getUID() + "/profile.jpg").getDownloadURL();
+        employee.setProfilePicURL(url);
+      }
+      catch(error){
+        employee.setProfilePicURL('https://www.woolha.com/media/2020/03/eevee.png');
+      }
+    }
     return employee;
   }
 
@@ -112,11 +122,16 @@ class LoginScreenState extends State<LoginScreen> {
         await Firebase.initializeApp();
         fuser = (await FirebaseAuth.instance.signInWithEmailAndPassword(email: _emailController.text, password: _passwordController.text)).user;
 
-        DialogTemplate.terminateLoader();
+        if(fuser.emailVerified) DialogTemplate.terminateLoader();
+        else {
+          DialogTemplate.terminateLoader();
+          DialogTemplate.showMessage(context, "Email has not been verified");
+          fuser = null;
+        }
       }
       else {
         DialogTemplate.terminateLoader();
-        DialogTemplate.showMessage(context, "Escriba una dirección de correo válido.");
+        DialogTemplate.showMessage(context, "Please, write a valid Email address.");
         fuser = null;
       }
 
@@ -124,7 +139,7 @@ class LoginScreenState extends State<LoginScreen> {
       DialogTemplate.terminateLoader();
       fuser = null;
       print(error.toString());
-      DialogTemplate.showMessage(context, "El usuario no existe o la contraseña es incorrecta.");
+      DialogTemplate.showMessage(context, "The user does not exist or the password is incorrect");
     }
 
     return fuser;
@@ -143,8 +158,9 @@ class LoginScreenState extends State<LoginScreen> {
             if (user != null) {
               try {
                 Employee employee = await this.buildUser(user);
-                Navigator.push(context, MaterialPageRoute(builder: (context) => Screen(employee: employee,)));
+                print("Construyo usuario");
                 DialogTemplate.terminateLoader();
+                Navigator.push(context, MaterialPageRoute(builder: (context) => Screen(employee: employee,)));
               }
               catch(error) {
                 DialogTemplate.terminateLoader();
@@ -153,6 +169,7 @@ class LoginScreenState extends State<LoginScreen> {
               }
             }
             else {
+              print("Algo ocurrió");
               DialogTemplate.terminateLoader();
             }
           }
@@ -237,7 +254,10 @@ class LoginScreenState extends State<LoginScreen> {
             //padding: new EdgeInsets.only(left: 20, right: 20),
             onPressed: () async {
               if(this._formkey.currentState.validate()) {
+                DialogTemplate.initLoader(context, "Sending...");
+                await Firebase.initializeApp();
                 await FirebaseAuth.instance.sendPasswordResetEmail(email: this._emailController.text);
+                DialogTemplate.terminateLoader();
                 DialogTemplate.showMessage(context, "An email has been sent. Follow the instructions to recover your password.");
               }
               else {

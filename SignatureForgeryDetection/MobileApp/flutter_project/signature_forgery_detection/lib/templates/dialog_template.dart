@@ -25,6 +25,28 @@ class DialogTemplate {
     );
   }
 
+  static void showSpecialMessage(BuildContext context, String message){
+    showDialog(
+        context: context,
+        builder: (context) {
+          return new AlertDialog(
+            title: new Text("Warning"),
+            content: new Text(message),
+            actions: <Widget>[
+              new FlatButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                },
+                child: new Text("Ok"),
+              ),
+            ],
+          );
+        }
+    );
+  }
+
   static void showLogConfirmationMessage(BuildContext context, String message){
     showDialog(
         context: context,

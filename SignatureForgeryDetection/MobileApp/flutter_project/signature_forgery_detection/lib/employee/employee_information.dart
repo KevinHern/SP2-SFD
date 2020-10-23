@@ -180,10 +180,25 @@ class EmployeeInfoState extends State<EmployeeInfo> {
     );
   }
 
+  Widget _profilePicture(){
+    return new Center(
+      child: CircleAvatar(
+        radius: 100,
+        foregroundColor: new Color(0xFF3949AB),
+        child: new CircleAvatar(
+          radius: 90,
+          backgroundImage: NetworkImage(this.employee.getProfilePicURL()),
+          //child: new Image.network('https://www.woolha.com/media/2020/03/eevee.png'),
+        ),
+      ),
+    );
+  }
+
   Widget _profile(){
     return new ListView(
       padding: EdgeInsets.only(top: 20, bottom: 30),
       children: <Widget>[
+        new Padding(padding: EdgeInsets.only(bottom: 10), child: this._profilePicture(),),
         new Text(
           this.employee.getParameterByString("name"),
           style: new TextStyle(

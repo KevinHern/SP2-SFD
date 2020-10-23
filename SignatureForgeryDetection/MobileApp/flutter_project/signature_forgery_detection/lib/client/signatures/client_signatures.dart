@@ -4,11 +4,15 @@ import 'dart:io';
 
 // Models
 import 'package:signature_forgery_detection/models/client.dart';
+import 'package:signature_forgery_detection/templates/container_template.dart';
 
 // Templates
 import 'package:signature_forgery_detection/templates/dialog_template.dart';
 import 'package:signature_forgery_detection/templates/image_handler.dart';
 import 'package:signature_forgery_detection/templates/navbar_template.dart';
+
+// Routes
+import 'client_edit_signature.dart';
 
 // Backend
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -202,9 +206,10 @@ class ClientSignatureState extends State<ClientSignature> {
             if(imgserver_link.isNotEmpty){
               DialogTemplate.initLoader(context, "Please, wait for a moment...");
               this.signatures[index] = await AIHTTPRequest.imageRequest(imgserver_link, this.client.getUID(), true, this.signames[index], index);
+              print((this.signatures[index] == null)? "Error in image fetching" : "All good!");
               DialogTemplate.terminateLoader();
 
-              if(this.signatures != null) this.shows[index] = true;
+              if(this.signatures[index] != null) this.shows[index] = true;
               else {
                 DialogTemplate.showMessage(context, "An error has ocurred while fetching the image.");
               }
@@ -238,6 +243,12 @@ class ClientSignatureState extends State<ClientSignature> {
           child: new Column(
             children: <Widget>[
               (this.signatures[index] == null)? new Container() : new Container(padding: new EdgeInsets.all(20), child: Image.file(this.signatures[index]), ),
+              ContainerTemplate.buildBasicButton(
+                () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => SignatureEditScreen(client: this.client, option: 0, issuer: this.issuer, signature: this.signatures[index], signatures: this.signatures,))).then((value) => {});
+                },
+                Text("Delete", style: TextStyle(fontSize: 18)),
+              ),
               // Delete button here
             ],
           ),

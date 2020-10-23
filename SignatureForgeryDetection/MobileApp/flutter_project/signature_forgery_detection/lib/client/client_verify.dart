@@ -15,6 +15,7 @@ import 'package:signature_forgery_detection/templates/dialog_template.dart';
 // Backend
 import 'package:signature_forgery_detection/backend/aihttp.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:signature_forgery_detection/backend/log_query.dart';
 
 class ClientVerifyScreen extends StatefulWidget{
   final Client client;
@@ -185,6 +186,14 @@ class ClientVerifyState extends State<ClientVerifyScreen>{
 
             DialogTemplate.initLoader(context, "Please, wait for a moment...");
             AIResponse response = await AIHTTPRequest.predictRequest(aiserver_link, this.client.getUID(), this._models, this._signature, this._pivot, true);
+            String clientName = this.client.getParameterByString("name") + " " + this.client.getParameterByString("lname");
+            int logCode = await (new QueryLog()).pushLog(
+                0, " requested a signature verification request on (CLIENT)" + clientName,
+                this.issuer,
+                clientName ,
+                this.client.getUID(),
+                0, "Issued a signature verification request.", 0
+            );
             DialogTemplate.terminateLoader();
 
             // Conv model results

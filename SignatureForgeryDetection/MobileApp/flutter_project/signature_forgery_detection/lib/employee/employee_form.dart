@@ -1,4 +1,5 @@
 // Basic Import
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 
@@ -144,6 +145,7 @@ class RegisterEmployeeState extends State<RegisterEmployee> {
           if(user != null && _formkey.currentState.validate()) {
             try{
               UserCredential newEmployee = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: _emailController.text, password: _emailController.text);
+              newEmployee.user.sendEmailVerification();
               final employees = FirebaseFirestore.instance.collection("employees");
               var filterArray = [];
               for (int i = 1; i < _nameController.text.length; i++) {
@@ -162,6 +164,7 @@ class RegisterEmployeeState extends State<RegisterEmployee> {
                 'powers': this._hasPowers,
               });
 
+              /*
               StorageReference storageReference = FirebaseStorage.instance
                   .ref();
               //.child('chats/${Path.basename(_image.path)}}');
@@ -170,6 +173,7 @@ class RegisterEmployeeState extends State<RegisterEmployee> {
                 StorageUploadTask uploadTask = storageReference.child("employees/" + newEmployee.user.uid + "/" + filename).putFile(this.signatures[i]);
                 await uploadTask.onComplete;
               }
+              */
 
               int logCode = await (new QueryLog()).pushLog(
                   0, " registered new employee: ",
@@ -179,7 +183,7 @@ class RegisterEmployeeState extends State<RegisterEmployee> {
                   0, "New employee has been hired", 0
               );
               DialogTemplate.terminateLoader();
-              if(logCode == 1) DialogTemplate.showMessage(context, "Insertion successful.");
+              if(logCode == 1) DialogTemplate.showMessage(context, "New employee created successfully. Sent an email verification.");
               else DialogTemplate.showMessage(context, "Insertion successful but failed to register a log.");
             }
             catch(error){

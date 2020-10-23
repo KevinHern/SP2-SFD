@@ -1,12 +1,20 @@
 // Basic Imports
 import 'package:flutter/material.dart';
+import 'dart:io';
 
 // Models
 import 'package:signature_forgery_detection/models/employee.dart';
+import 'package:signature_forgery_detection/templates/navbar_template.dart';
 import 'profile_edit.dart';
 
 // Templates
 import 'package:signature_forgery_detection/templates/container_template.dart';
+import 'package:signature_forgery_detection/templates/image_handler.dart';
+import 'package:signature_forgery_detection/templates/dialog_template.dart';
+
+// Backend
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:signature_forgery_detection/backend/log_query.dart';
 
 class ProfileScreen extends StatefulWidget {
   final Employee employee;
@@ -43,10 +51,51 @@ class ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _profilePicture(){
-    return new CircleAvatar(
-      radius: 150,
-      backgroundImage: NetworkImage('https://www.woolha.com/media/2020/03/eevee.png'),
-      foregroundColor: new Color(0x6F74DDFF),
+    return new Center(
+      child: new Stack(
+        children: <Widget>[
+          CircleAvatar(
+            radius: 100,
+            foregroundColor: new Color(0xFF3949AB),
+            child: new CircleAvatar(
+              radius: 90,
+              backgroundImage: NetworkImage(this.employee.getProfilePicURL()),
+              //child: new Image.network('https://www.woolha.com/media/2020/03/eevee.png'),
+            ),
+          ),
+          new Positioned(
+            bottom: 0,
+            right: 10,
+            child: NavBarTemplate.buildFAB(
+                Icons.camera,
+                () async {
+                  File profilePic = await ImageHandler.getImage(0);
+                  StorageReference storageReference = FirebaseStorage.instance.ref();
+                  String filename = "profile." + profilePic.path.split('/').last.split('.').last;
+                  DialogTemplate.initLoader(context, "Uploading profile picture...");
+                  StorageUploadTask uploadTask = storageReference.child("employees/" + this.employee.getUID() + "/" + filename).putFile(profilePic);
+                  await uploadTask.onComplete;
+                  int logCode = await (new QueryLog()).pushLog(
+                      0, " updated his or her information.",
+                      this.employee.getParameterByString("name") + " " + this.employee.getParameterByString("lname"),
+                      '',
+                      this.employee.getUID(),
+                      0, "Updated the profile picture field.", 0
+                  );
+                  DialogTemplate.terminateLoader();
+                  String url = await FirebaseStorage.instance.ref().child("employees/" + this.employee.getUID() + "/profile.jpg").getDownloadURL();
+                  this.employee.setProfilePicURL(url);
+                  DialogTemplate.showMessage(context, "Profile picture updated successfully");
+
+
+
+                  setState(() {});
+                },
+                "Profile_FAB"
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -73,7 +122,7 @@ class ProfileScreenState extends State<ProfileScreen> {
     return new ListView(
       padding: EdgeInsets.only(top: 50),
       children: <Widget>[
-        //this._profilePicture(),
+        new Padding(padding: EdgeInsets.only(bottom: 10), child: this._profilePicture(),),
         new Text(
           this.employee.getParameterByString("name") + " " + this.employee.getParameterByString("lname"),
           style: new TextStyle(

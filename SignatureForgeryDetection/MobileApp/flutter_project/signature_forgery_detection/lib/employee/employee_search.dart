@@ -13,6 +13,7 @@ import 'package:signature_forgery_detection/employee/employee_information.dart';
 
 // Backend
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class SearchPeople extends StatefulWidget{
   final String issuer;
@@ -81,7 +82,7 @@ class SearchPeopleState extends State<SearchPeople> {
     );
   }
 
-  Widget _buildPersonTile(DocumentSnapshot snapshot){
+  Widget _buildPersonTile(DocumentSnapshot snapshot) {
     Employee employee = new Employee(
       snapshot.get("name"), snapshot.get("lname"),
       snapshot.get("email"),
@@ -98,7 +99,14 @@ class SearchPeopleState extends State<SearchPeople> {
         title: new Wrap(
           children: <Widget>[new Text(employee.getParameterByString("name") + " " + employee.getParameterByString("lname"), style: new TextStyle(fontSize: 20), textAlign: TextAlign.left,)],
         ),
-        onTap: () {
+        onTap: () async {
+          try{
+            String url = await FirebaseStorage.instance.ref().child("employees/" + employee.getUID() + "/profile.jpg").getDownloadURL();
+            employee.setProfilePicURL(url);
+          }
+          catch(error){
+            employee.setProfilePicURL('https://www.woolha.com/media/2020/03/eevee.png');
+          }
           Navigator.push(context, MaterialPageRoute(builder: (context) => EmployeeInfoScreen(employee: employee, issuer: this.issuer,)));
         },
       ),

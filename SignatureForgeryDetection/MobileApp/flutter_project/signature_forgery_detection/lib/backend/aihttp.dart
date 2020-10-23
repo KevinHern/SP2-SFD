@@ -1,4 +1,6 @@
 // Basic
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'dart:convert';
@@ -141,7 +143,6 @@ class AIHTTPRequest{
     json += ', "sclient": ' + isClient.toString();
     if(model == 22) json += ', "signer": "' + signer + '"';
     json += '}';
-    print(json);
 
     // Do request
     Response response = await post(url, headers: headers, body: json);
@@ -190,7 +191,6 @@ class AIHTTPRequest{
     json += ', "sclient": ' + isClient.toString();
     json += ', "typesig": ' + 1.toString();
     json += '}';
-    print(json);
 
     // Do request
     Response response = await post(url, headers: headers, body: json);
@@ -224,7 +224,6 @@ class AIHTTPRequest{
     json += ', "typesig": ' + 1.toString();
     json += ', "imgname": "' + signame + '"';
     json += '}';
-    print(json);
 
     // Do request
     Response response = await post(url, headers: headers, body: json);
@@ -239,14 +238,38 @@ class AIHTTPRequest{
         final Directory directory = await getApplicationDocumentsDirectory();
         new Directory('${directory.path}/temp/').create();
         List<int> byteList = recvJson['img'].cast<int>();
-        return File('${directory.path}/temp/' + signame).writeAsBytesSync(byteList);
+        File('${directory.path}/temp/' + signame).writeAsBytesSync(byteList);
+        return new File('${directory.path}/temp/' + signame);
       }
-      else {
-        return null;
-      }
+      else return null;
     }
-    else {
-      return null;
+    else return null;
+  }
+
+  static Future deleteImageRequest(String link, String signer, bool isClient, String signame) async {
+    // Making POST request
+    String url = link + "/deleteimg";
+    Map<String, String> headers = {"Content-type": "application/json"};
+
+    // Making JSON Body
+    String json = '{"signer": "' + signer + '"';
+    json += ', "sclient": ' + isClient.toString();
+    json += ', "typesig": ' + 1.toString();
+    json += ', "imgname": "' + signame + '"';
+    json += '}';
+
+    print(json);
+
+    // Do request
+    Response response = await post(url, headers: headers, body: json);
+
+    // Check Status
+    if(response.statusCode == 200){
+      Map<String, dynamic> recvJson = JsonDecoder().convert(response.body);
+      // [code, conv results, ss results, sm results]
+      print(recvJson);
+      return (recvJson["code"] == 1)? true : false;
     }
+    else return false;
   }
 }

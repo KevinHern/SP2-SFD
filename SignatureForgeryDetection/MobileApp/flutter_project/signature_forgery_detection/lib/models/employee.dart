@@ -3,6 +3,7 @@ class Employee{
   String _uid;
   bool _hasPowers;
   List<String> _information = new List();
+  String profileUrl;
   //_name, _lastName, _email, _phoneNumber, _department, _position, _Schedule;
 
   Employee(String name, String lastName, String email, String phoneNumber, String birthday,
@@ -13,6 +14,12 @@ class Employee{
   void setUser(var user){
     this._user = user;
   }
+
+  void setProfilePicURL(String url){
+    this.profileUrl = url;
+  }
+
+  String getProfilePicURL(){ return this.profileUrl; }
 
   Object getUser(){
     return this._user;

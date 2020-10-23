@@ -191,8 +191,8 @@ class MainLogScreenState extends State<MainLogScreen> {
             }
             else {
               return new AlertDialog(
-                title: new Text("Warning"),
-                content: new Text("No matches were found."),
+                title: new Text("Notice"),
+                content: new Text("No active logs were found."),
               );
             }
           }
