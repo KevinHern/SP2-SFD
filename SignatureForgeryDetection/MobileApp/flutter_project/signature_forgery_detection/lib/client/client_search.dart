@@ -63,6 +63,11 @@ class SearchPeopleState extends State<SearchPeople> {
             ),
           ),
           controller: this._searchBarControler,
+          onEditingComplete: () {
+            setState(() {
+
+            });
+          },
         ),
       )
     );
@@ -138,8 +143,10 @@ class SearchPeopleState extends State<SearchPeople> {
       // REPLACE THIS LISTVIEW WITH LISTVIEW BUILDER WHEN IMPLEMENTING BACKEND
       child: (new StreamTemplate()).buildStreamWithContext(
           false,
-          "No matches where found",
-          (!_searchBarControler.text.isEmpty)? FirebaseFirestore.instance.collection("clients").where('name', isGreaterThanOrEqualTo: _searchBarControler.text).snapshots() : FirebaseFirestore.instance.collection("clients").snapshots(),
+          "No clients where found",
+          (!_searchBarControler.text.isEmpty)?
+          FirebaseFirestore.instance.collection("clients").orderBy("name", descending: false).where('name', isGreaterThanOrEqualTo: _searchBarControler.text).snapshots() :
+          FirebaseFirestore.instance.collection("clients").orderBy("name", descending: false).snapshots(),
               (context, doc) => _buildPersonTile(doc)
       ),
     );
@@ -150,7 +157,7 @@ class SearchPeopleState extends State<SearchPeople> {
       padding: new EdgeInsets.only(left: 30, right: 30, top: 50, bottom: 100),
       children: <Widget>[
         this._buildSearchBar(),
-        this._buildSearchButton(),
+        //this._buildSearchButton(),
         this._buildDivider(),
         this._buildDisplayPeople()
       ],

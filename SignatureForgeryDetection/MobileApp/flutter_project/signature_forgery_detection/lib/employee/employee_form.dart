@@ -140,10 +140,10 @@ class RegisterEmployeeState extends State<RegisterEmployee> {
         ),
         //padding: new EdgeInsets.only(left: 20, right: 20),
         onPressed: () async {
-          DialogTemplate.initLoader(context, "Espera un momento...");
           User user = FirebaseAuth.instance.currentUser;
           if(user != null && _formkey.currentState.validate()) {
             try{
+              DialogTemplate.initLoader(context, "Espera un momento...");
               UserCredential newEmployee = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: _emailController.text, password: _emailController.text);
               newEmployee.user.sendEmailVerification();
               final employees = FirebaseFirestore.instance.collection("employees");
@@ -192,11 +192,9 @@ class RegisterEmployeeState extends State<RegisterEmployee> {
             }
           }
           else if(user == null){
-            DialogTemplate.terminateLoader();
             DialogTemplate.showMessage(context, "A fatal error has occurred, restart the application.");
           }
           else {
-            DialogTemplate.terminateLoader();
             DialogTemplate.showMessage(context, "Input the data correctly");
           }
         },

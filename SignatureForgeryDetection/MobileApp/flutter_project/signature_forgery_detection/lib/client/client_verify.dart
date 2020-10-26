@@ -170,9 +170,6 @@ class ClientVerifyState extends State<ClientVerifyScreen>{
           else if(!this._convolutionalClassification && !this._signer_signatureClassification && !this._siameseNetwork){
             DialogTemplate.showMessage(context, "Please, select a model to verify a signature");
           }
-          else if(this._siameseNetwork && (this._pivot == null)){
-            DialogTemplate.showMessage(context, "Please, select a pivot signature.");
-          }
           else {
             // All good
             String aiserver_link = "";
@@ -185,7 +182,7 @@ class ClientVerifyState extends State<ClientVerifyScreen>{
             });
 
             DialogTemplate.initLoader(context, "Please, wait for a moment...");
-            AIResponse response = await AIHTTPRequest.predictRequest(aiserver_link, this.client.getUID(), this._models, this._signature, this._pivot, true);
+            AIResponse response = await AIHTTPRequest.predictRequest(aiserver_link, this.client.getUID(), this._models, this._signature, true);
             String clientName = this.client.getParameterByString("name") + " " + this.client.getParameterByString("lname");
             int logCode = await (new QueryLog()).pushLog(
                 0, " requested a signature verification request on (CLIENT)" + clientName,
@@ -200,11 +197,20 @@ class ClientVerifyState extends State<ClientVerifyScreen>{
             String cm_results = "";
             String ss_results = "";
             String sm_results = "";
-            if(response.getModelFlag("conv")) cm_results = "\n\nThe Convolutional Model estimates that the signature is " + response.getConvPred()[0]
-                + ".\nThe signer was classified " + response.getConvPred()[1] + "ly.";
-            if(response.getModelFlag("ss")) ss_results = "\n\nThe Signer-Signature Model estimates that the signature is " + response.getSSPred()[1]
-                + ".\nAlso, it classified the signer " + response.getSSPred()[0] + "ly.";
-            if(response.getModelFlag("siamese")) sm_results = "\n\nThe Siamese Model estimates that the signature is " + response.getSiamesePred() + ".";
+            if(response.getModelFlag("conv")) {
+              cm_results = "\n\nThe Convolutional Model estimates that the signature is " + response.getConvPred()[0]
+                  + ".\nThe signer was classified " + response.getConvPred()[1] + "ly.";
+              if(response.getConvPred()[1] == 'correct') cm_results += "\nThe Model is " + response.getModelProbability('conv') + "% confident about its veredict.";
+            }
+            if(response.getModelFlag("ss")) {
+              ss_results = "\n\nThe Signer-Signature Model classified the signer " + response.getSSPred()[0] + "ly."
+                  + " It estimates that the signature is " + response.getSSPred()[1] + ".";
+              if(response.getSSPred()[0] == 'correct') ss_results += "\nThe Model is " + response.getModelProbability('ss') + "% confident about its veredict.";
+            }
+            if(response.getModelFlag("siamese")) {
+              sm_results = response.getSiameseSuccess()? "\n\nThe Siamese Model estimates that the signature is " + response.getSiamesePred() + "." :
+              " \n\nAn error occurred with the Siamese Model, the client does not have any registered signatures." ;
+            }
 
             String total_text = "Results:" + cm_results + ss_results + sm_results;
 
@@ -230,7 +236,7 @@ class ClientVerifyState extends State<ClientVerifyScreen>{
                 children: <Widget>[
                   ContainerTemplate.buildContainer(new Padding(padding: EdgeInsets.only(left: 10, top: 5, bottom: 5), child: this.powerSwitch("Convolution Classification Model", 1),), [15, 15, 15, 15], 10, 5, 5, 0.15, 10),
                   ContainerTemplate.buildContainer(new Padding(padding: EdgeInsets.only(left: 10, top: 5, bottom: 5), child: this.powerSwitch("Signer Signature Classification Model", 2),), [15, 15, 15, 15], 10, 5, 5, 0.15, 10),
-                  ContainerTemplate.buildContainer(new Padding(padding: EdgeInsets.only(left: 10, top: 5, bottom: 5), child: this.powerSwitch("Siamese Network Model", 0),), [15, 15, 15, 15], 10, 5, 5, 0.15, 10),
+                  //ContainerTemplate.buildContainer(new Padding(padding: EdgeInsets.only(left: 10, top: 5, bottom: 5), child: this.powerSwitch("Siamese Network Model", 0),), [15, 15, 15, 15], 10, 5, 5, 0.15, 10),
                   new Padding(
                     padding: EdgeInsets.only(bottom: 10, top: 5),
                     child: new Text("Select Signature", style: new TextStyle(fontWeight: FontWeight.bold, fontSize: 28), textAlign: TextAlign.center,),
@@ -240,6 +246,7 @@ class ClientVerifyState extends State<ClientVerifyScreen>{
                     padding: new EdgeInsets.all(30),
                     child: (_signature == null)? null : Image.file(this._signature),
                   ),
+                  /*
                   Visibility(
                     visible: this._siameseNetwork,
                     child: new Column(
@@ -256,6 +263,7 @@ class ClientVerifyState extends State<ClientVerifyScreen>{
                       ],
                     ),
                   ),
+                   */
                   this._buildVerifyButton(),
                 ],
               ),

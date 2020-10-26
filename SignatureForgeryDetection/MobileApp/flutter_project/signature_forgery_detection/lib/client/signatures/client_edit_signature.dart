@@ -127,7 +127,7 @@ class SignatureEditState extends State<SignatureEdit> with SingleTickerProviderS
                             int logCode = await (new QueryLog()).pushLog(
                                 0, " deleted (CLIENT) " + clientName + "'s signature: " + signame,
                                 this.issuer,
-                                clientName ,
+                                '' ,
                                 this.client.getUID(),
                                 0, _fieldController.text, 0
                             );

@@ -147,8 +147,11 @@ class MainScreenState extends State<MainScreen> with SingleTickerProviderStateMi
   }
 
   void navOnTap(index){
+    print(this.employee.getPowers()? "Has powers": "does not have powers");
     setState(() {
+      this.navBar.setBoth(index);
       if(this.navBar.getPageIndex() == 0 && !this.employee.getPowers()) {
+        this.navBar.setBoth(1);
         Navigator.push(context, MaterialPageRoute(builder: (context) => MainClientScreen(employee: this.employee,)));
       }
       else {

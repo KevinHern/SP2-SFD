@@ -72,12 +72,15 @@ class MainClientScreenState extends State<MainClientScreen> with SingleTickerPro
             [30, 0, 30, 30], 25,
             15, 15, 0.15, 30,
           ),
-          ContainerTemplate.buildTileOption(
-            Icons.android,
-            "AI Models",
-            () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => AIMainScreen(isClient: true, employee: this.employee))).then((value) => setState(() {}));
-            }
+          new Visibility(
+            visible: this.employee.getPowers(),
+            child: ContainerTemplate.buildTileOption(
+                Icons.android,
+                "AI Models",
+                    () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => AIMainScreen(isClient: true, employee: this.employee))).then((value) => setState(() {}));
+                }
+            ),
           ),
         ],
       ),

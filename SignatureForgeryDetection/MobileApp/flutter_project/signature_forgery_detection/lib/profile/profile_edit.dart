@@ -178,7 +178,7 @@ class ProfileEditState extends State<ProfileEdit> with SingleTickerProviderState
           DialogTemplate.showFormMessage(context, "Please, fill the form.");
         }
       },
-      Text('Update Info',
+      Text('Update',
           style: TextStyle(fontSize: 18)),
     );
   }

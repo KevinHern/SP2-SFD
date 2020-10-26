@@ -16,6 +16,7 @@ import 'package:signature_forgery_detection/templates/navbar_template.dart';
 // Backend
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:signature_forgery_detection/backend/aihttp.dart';
+import 'package:signature_forgery_detection/backend/log_query.dart';
 
 class ClientMoreSignaturesScreen extends StatelessWidget{
   final Client client;
@@ -198,8 +199,19 @@ class ClientMoreSignaturesState extends State<ClientMoreSignatures> {
             'sigindex': signindex
           });
 
+          String clientName = this.client.getParameterByString("name") + " " + this.client.getParameterByString("lname");
+          String description = "registered (CLIENT) " + clientName + ((this.signatures.length == 1)?  "'s new signature." : "'s multiple signatures.");
+
+          int logCode = await (new QueryLog()).pushLog(
+              0, description,
+              this.issuer,
+              '' ,
+              this.client.getUID(),
+              0, 'new signature registration.', 0
+          );
+
           DialogTemplate.terminateLoader();
-          DialogTemplate.showMessage(context, "Upload succesfull");
+          DialogTemplate.showMessage(context, "Upload successful");
 
         },
         color: new Color(0xFF002FD3),

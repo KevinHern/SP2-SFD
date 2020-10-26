@@ -59,6 +59,11 @@ class SearchPeopleState extends State<SearchPeople> {
               ),
             ),
             controller: this._searchBarControler,
+            onEditingComplete: (){
+              setState(() {
+
+              });
+            },
           ),
         )
     );
@@ -117,6 +122,10 @@ class SearchPeopleState extends State<SearchPeople> {
   }
 
   Widget _buildDisplayPeople() {
+    List<String> searchWords = [];
+    for(int i = 0; i < _searchBarControler.text.length; i++){
+      searchWords.add(_searchBarControler.text.substring(0, 0 + i + 1));
+    }
     return new Container(
       decoration: new BoxDecoration(
         border: Border.all(
@@ -132,7 +141,10 @@ class SearchPeopleState extends State<SearchPeople> {
       child: (new StreamTemplate()).buildStreamWithContext(
           false,
           "No matches where found",
-          (_searchBarControler.text.isNotEmpty)? FirebaseFirestore.instance.collection("employees").where('name', isGreaterThanOrEqualTo: _searchBarControler.text).snapshots() : FirebaseFirestore.instance.collection("employees").snapshots(),
+          (_searchBarControler.text.isNotEmpty)?
+              //FirebaseFirestore.instance.collection("employees").where('name', isGreaterThanOrEqualTo: _searchBarControler.text).snapshots() : FirebaseFirestore.instance.collection("employees").snapshots(),
+              FirebaseFirestore.instance.collection("employees").orderBy("name", descending: false).where('name', isGreaterThanOrEqualTo: _searchBarControler.text).snapshots() :
+              FirebaseFirestore.instance.collection("employees").orderBy("name", descending: false).snapshots(),
               (context, doc) => _buildPersonTile(doc)
       ),
     );
@@ -143,7 +155,7 @@ class SearchPeopleState extends State<SearchPeople> {
       padding: new EdgeInsets.only(left: 30, right: 30, top: 50, bottom: 100),
       children: <Widget>[
         this._buildSearchBar(),
-        this._buildSearchButton(),
+        //this._buildSearchButton(),
         this._buildDivider(),
         this._buildDisplayPeople()
       ],

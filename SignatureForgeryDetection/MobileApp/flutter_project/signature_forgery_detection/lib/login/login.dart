@@ -161,6 +161,8 @@ class LoginScreenState extends State<LoginScreen> {
                 print("Construyo usuario");
                 DialogTemplate.terminateLoader();
                 Navigator.push(context, MaterialPageRoute(builder: (context) => Screen(employee: employee,)));
+                this._emailController.text = "";
+                this._passwordController.text = "";
               }
               catch(error) {
                 DialogTemplate.terminateLoader();
@@ -195,6 +197,7 @@ class LoginScreenState extends State<LoginScreen> {
         onPressed: () {
           this.isInLogin = !this.isInLogin;
           this._emailController.text = "";
+          this._passwordController.text = "";
           setState(() {});
         },
         color: new Color(0xFFF00000),
@@ -256,11 +259,19 @@ class LoginScreenState extends State<LoginScreen> {
               if(this._formkey.currentState.validate()) {
                 DialogTemplate.initLoader(context, "Sending...");
                 await Firebase.initializeApp();
-                await FirebaseAuth.instance.sendPasswordResetEmail(email: this._emailController.text);
-                DialogTemplate.terminateLoader();
-                DialogTemplate.showMessage(context, "An email has been sent. Follow the instructions to recover your password.");
+                try{
+                  await FirebaseAuth.instance.sendPasswordResetEmail(email: this._emailController.text);
+                  DialogTemplate.terminateLoader();
+                  DialogTemplate.showMessage(context, "An email has been sent. Follow the instructions to recover your password.");
+                }
+                catch(error){
+                  DialogTemplate.terminateLoader();
+                  DialogTemplate.showMessage(context, "Enter a valid email or user does not exist.");
+
+                }
               }
               else {
+                DialogTemplate.terminateLoader();
                 DialogTemplate.showMessage(context, "Enter a valid email address.");
               }
             },

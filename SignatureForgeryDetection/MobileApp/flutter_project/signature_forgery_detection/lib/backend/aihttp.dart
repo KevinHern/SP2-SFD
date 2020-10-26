@@ -41,7 +41,7 @@ class AIHTTPRequest{
     }
   }
 
-  static Future predictRequest(String link, String signer, var models, File suspectSign, File pivot, bool sclient) async {
+  static Future predictRequest(String link, String signer, var models, File suspectSign, bool sclient) async {
     bool conv_model = false;
     bool ss_model = false;
     bool sm_model = false;
@@ -66,13 +66,7 @@ class AIHTTPRequest{
     String json = '{"models": [' + strModels + ']';
     json += ', "img": ' + suspectSign.readAsBytesSync().toString();
     json += ', "imgext": "' + suspectSign.path.split('/').last.split('.').last + '"';
-    if(sm_model) {
-      json += ', "pivot": ' + pivot.readAsBytesSync().toString();
-      json += ', "pivotext": "' + pivot.path.split('/').last.split('.').last + '"';
-    }
-    if(conv_model || ss_model){
-      json += ', "signer": ' + signer.toString();
-    }
+    json += ', "signer": ' + signer.toString();
     json += ', "sclient": ' + sclient.toString();
     json += '}';
 
@@ -89,18 +83,25 @@ class AIHTTPRequest{
       if(conv_model) {
         ais.setModelFlag("conv", conv_model);
         ais.setConvPred(recvJson['conv_model']['prediction'], recvJson['conv_model']['signerp']);
+        if(recvJson['conv_model']['signerp'] == 'correct') ais.setModelProbability('conv', recvJson['conv_model']['confidence']);
       }
 
       // Constructing response for Signer-Signature Model
       if(ss_model){
         ais.setModelFlag("ss", ss_model);
         ais.setSSPred(recvJson['ss_model']['prediction'], recvJson['ss_model']['signerp']);
+        if(recvJson['ss_model']['signerp'] == 'correct') ais.setModelProbability('ss', recvJson['ss_model']['confidence']);
       }
 
       // Constructing response for Siamese Model
       if(sm_model){
         ais.setModelFlag("siamese", sm_model);
-        ais.setSiamesePred(recvJson['siamese_model']['prediction']);
+        ais.setSiameseSuccess(recvJson['siamese_model']['success']);
+        if(ais.getSiameseSuccess()) {
+          ais.setSiamesePred(recvJson['siamese_model']['prediction']);
+          ais.setModelProbability('siamese', recvJson['siamese_model']['confidence']);
+        }
+
       }
       return ais;
     }

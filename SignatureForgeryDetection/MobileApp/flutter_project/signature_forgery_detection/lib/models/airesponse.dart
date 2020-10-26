@@ -1,13 +1,44 @@
 class AIResponse{
   int code;
-  bool _conv_model, _ss_model, _siamese_model;
+  bool _conv_model, _ss_model, _siamese_model, _siamese_success;
   String _conv_pred, _conv_pred_signer, _siamese_pred, _ss_pred_signer, _ss_pred_signature;
   String _last_date, signer;
+  String _conv_probability, _ss_probability, _siamese_probability;
   var signers = [];
   AIResponse(){
     this._conv_model = false;
     this._ss_model = false;
     this._siamese_model = false;
+  }
+
+  void setModelProbability(String option, String value){
+    switch(option){
+      case "conv":
+        this._conv_probability = value;
+        break;
+      case "ss":
+        this._ss_probability = value;
+        break;
+      case "siamese":
+        this._siamese_probability = value;
+        break;
+      default:
+        break;
+    }
+  }
+
+  String getModelProbability(String option){
+    switch(option){
+      case "conv":
+        return this._conv_probability;
+      case "ss":
+        return this._ss_probability;
+      case "siamese":
+        return this._siamese_probability;
+      default:
+        return "";
+        break;
+    }
   }
 
   void setModelFlag(String option, bool value){
@@ -98,4 +129,7 @@ class AIResponse{
   List<String> getSSPred(){
     return (this._ss_model)? [this._ss_pred_signer, this._ss_pred_signature] : "No predictions found for the Signer-Signature Model";
   }
+
+  void setSiameseSuccess(bool success){ this._siamese_success = success; }
+  bool getSiameseSuccess(){ return this._siamese_success; }
 }

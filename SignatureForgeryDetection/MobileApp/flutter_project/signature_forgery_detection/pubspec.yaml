@@ -37,7 +37,7 @@ dependencies:
   firebase_storage: ^4.0.0
   http: ^0.12.2
   file_picker: ^2.0.1+2
-  path_provider: ^0.4.1
+  path_provider: ^1.6.22
 
 dev_dependencies:
   flutter_test:

@@ -11,6 +11,7 @@ import 'package:signature_forgery_detection/templates/navbar_template.dart';
 // Backend
 import 'package:signature_forgery_detection/backend/aihttp.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:signature_forgery_detection/backend/log_query.dart';
 
 class AIMainScreen extends StatelessWidget {
   final Employee employee;
@@ -76,6 +77,15 @@ class AIModelState extends State<AIModel>{
             if (model == 1) this.ai_conv = await AIHTTPRequest.trainRequest(aiserver_link, model, this.isClient, "");
             else if (model == 21) this.ai_ss = await AIHTTPRequest.trainRequest(aiserver_link, model, this.isClient, "");
             else this.ai_sms = await AIHTTPRequest.trainRequest(aiserver_link, model, this.isClient, "");
+
+            String aimodel = (model == 1)? "AI Model: Convolutional Model" : (model == 21)? " Signer Network" : "AI Model: Siamese Model";
+            int logCode = await (new QueryLog()).pushLog(
+                0, " decided to retrain the " + aimodel,
+                this.employee.getParameterByString("name") + " " + this.employee.getParameterByString("lname"),
+                '',
+                this.employee.getUID(),
+                0, "Retrained an AI Model", 0
+            );
             DialogTemplate.terminateLoader();
           }
         },
@@ -180,7 +190,7 @@ class AIModelState extends State<AIModel>{
       children: <Widget>[
         this._buildCollapsibleTile(Icons.pages, "Convolutional Model", 1, this.showConvolutional),
         this._buildCollapsibleTile(Icons.contacts, "Signer-Signature Model", 21, this.showSignerSignature),
-        this._buildCollapsibleTile(Icons.settings_overscan, "Siamese Model", 3, this.showSiamese),
+        //this._buildCollapsibleTile(Icons.settings_overscan, "Siamese Model", 3, this.showSiamese),
         //new Text((isClient)? "Client!" : "Employee!")
       ],
     );

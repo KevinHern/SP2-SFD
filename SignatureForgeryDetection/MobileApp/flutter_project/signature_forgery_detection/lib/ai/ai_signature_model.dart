@@ -14,6 +14,7 @@ import 'package:signature_forgery_detection/templates/navbar_template.dart';
 // Backend
 import 'package:signature_forgery_detection/backend/aihttp.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:signature_forgery_detection/backend/log_query.dart';
 
 class AIMainClientScreen extends StatelessWidget {
   final Client client;
@@ -79,6 +80,14 @@ class AIModelClientState extends State<AIModelClient>{
           if(aiserver_link.isNotEmpty){
             DialogTemplate.initLoader(context, "Please, wait for a moment...");
             this.ai_signature = await AIHTTPRequest.trainRequest(aiserver_link, 22, true, this.client.getUID());
+            String clientName = this.client.getParameterByString("name") + " " + this.client.getParameterByString("lname");
+            int logCode = await (new QueryLog()).pushLog(
+                0, " decided to train " + clientName + "'s Signature Model",
+                this.issuer,
+                '',
+                this.client.getUID(),
+                0, "Retrained an AI Model", 0
+            );
             DialogTemplate.terminateLoader();
           }
         },

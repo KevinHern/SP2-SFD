@@ -251,9 +251,9 @@ class DialogTemplate {
     progress.show();
   }
 
-  static void terminateLoader(){
+  static void terminateLoader() async {
     if(progress.isShowing() && progress != Null) {
-      progress.hide();
+      await progress.hide().timeout(new Duration(milliseconds: 500));
     }
   }
 }
