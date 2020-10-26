@@ -25,11 +25,63 @@ class SearchPeopleState extends State<SearchPeople> {
   final TextEditingController _searchBarControler = new TextEditingController();
   final int _iconColor = 0xff3949AB;
   var people = [];
+  List<String> _options = ['name', 'lname', 'email'];
+  String _selectedOption;
 
   SearchPeopleState({Key key, @required this.issuer, @required this.issuerPowers});
 
+  @override
+  void initState(){
+    super.initState();
+    this._selectedOption = _options[0];
+  }
+
+  String mapOption(String option){
+    switch(option){
+      case 'name':
+        return 'Name';
+      case 'lname':
+        return 'Last Name';
+      case 'email':
+        return 'Email';
+      default:
+        return '';
+    }
+  }
+
   Widget _buildFilter() {
-    return null;//FormTemplate.buildDropDown(items, displaying);
+    return new Container(
+        padding: EdgeInsets.only(left: 20.0, right: 20.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(25)),
+          border: Border.all(
+              width: 1,
+              color: Colors.black,
+              style: BorderStyle.solid
+          ),
+        ),
+        child: new Padding(
+          padding: EdgeInsets.only(left: 25, right: 25),
+          child: new Center(
+            child: new DropdownButton(
+              hint: Text(''), // Not necessary for Option 1
+              value: _selectedOption,
+              onChanged: (newValue) {
+                setState(() {
+                  _selectedOption = newValue;
+                  print(_selectedOption);
+                });
+              },
+              items: _options.map((option) {
+                return DropdownMenuItem(
+                  child: new Text(this.mapOption(option)),
+                  value: option,
+                );
+              }).toList(),
+            ),
+          ),
+        )
+    );
   }
 
   Widget _buildSearchBar(){
@@ -145,8 +197,8 @@ class SearchPeopleState extends State<SearchPeople> {
           false,
           "No clients where found",
           (!_searchBarControler.text.isEmpty)?
-          FirebaseFirestore.instance.collection("clients").orderBy("name", descending: false).where('name', isGreaterThanOrEqualTo: _searchBarControler.text).snapshots() :
-          FirebaseFirestore.instance.collection("clients").orderBy("name", descending: false).snapshots(),
+          FirebaseFirestore.instance.collection("clients").orderBy(_selectedOption, descending: false).where(_selectedOption, isGreaterThanOrEqualTo: _searchBarControler.text).snapshots() :
+          FirebaseFirestore.instance.collection("clients").orderBy(_selectedOption, descending: false).snapshots(),
               (context, doc) => _buildPersonTile(doc)
       ),
     );
@@ -156,6 +208,7 @@ class SearchPeopleState extends State<SearchPeople> {
     return new ListView(
       padding: new EdgeInsets.only(left: 30, right: 30, top: 50, bottom: 100),
       children: <Widget>[
+        new Padding(padding: EdgeInsets.only(left: 50, right: 50, bottom: 10), child: this._buildFilter(),),
         this._buildSearchBar(),
         //this._buildSearchButton(),
         this._buildDivider(),
