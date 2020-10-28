@@ -158,9 +158,19 @@ class LoginScreenState extends State<LoginScreen> {
             if (user != null) {
               try {
                 Employee employee = await this.buildUser(user);
-                print("Construyo usuario");
+                bool isActive = await FirebaseFirestore.instance.runTransaction<bool>((transaction) async {
+                  final CollectionReference misc = FirebaseFirestore.instance.collection('miscellaneous');
+                  final doc = misc.doc("active");
+                  DocumentSnapshot snapshot = await transaction.get(doc);
+                  return snapshot.get("isActive");
+
+                });
                 DialogTemplate.terminateLoader();
-                Navigator.push(context, MaterialPageRoute(builder: (context) => Screen(employee: employee,)));
+                if(isActive || employee.getPowers()) Navigator.push(context, MaterialPageRoute(builder: (context) => Screen(employee: employee, isActive: isActive,)));
+                else {
+                  DialogTemplate.showMessage(context, "Services are unavailable");
+                  employee = null;
+                }
                 this._emailController.text = "";
                 this._passwordController.text = "";
               }

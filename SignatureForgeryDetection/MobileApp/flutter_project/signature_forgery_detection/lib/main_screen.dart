@@ -1,5 +1,6 @@
 // Basic Imports
 import 'package:flutter/material.dart';
+import 'package:signature_forgery_detection/templates/dialog_template.dart';
 import 'models/option.dart';
 
 // Routes
@@ -16,30 +17,36 @@ import 'package:signature_forgery_detection/templates/fade_template.dart';
 // Models
 import 'package:signature_forgery_detection/models/navbar.dart';
 import 'package:signature_forgery_detection/models/employee.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Screen extends StatelessWidget {
   final Employee employee;
-  Screen({Key key, @required this.employee});
+  final bool isActive;
+  Screen({Key key, @required this.employee, @required this.isActive});
 
   @override
   Widget build(BuildContext context) {
-    return MainScreen(employee: this.employee,);
+    return MainScreen(employee: this.employee, isActive: this.isActive,);
   }
 }
 
 class MainScreen extends StatefulWidget {
   final Employee employee;
-  MainScreen({Key key, @required this.employee}) : super(key: key);
+  final bool isActive;
+  MainScreen({Key key, @required this.employee, @required this.isActive}) : super(key: key);
 
   @override
-  MainScreenState createState() => MainScreenState(employee: this.employee);
+  MainScreenState createState() => MainScreenState(employee: this.employee, isActive: this.isActive);
 }
 
 class MainScreenState extends State<MainScreen> with SingleTickerProviderStateMixin {
   final Employee employee;
+  bool isActive;
   //Option option;
   NavBar navBar;
-  final int _iconColor = 0xff3949AB;
+  final int _iconLabelColor = 0xFF002FD3;
+  final int _borderColor = 0xff856fdd;
+  final int _borderoFocusColor = 0xff5436cf;
   FadeAnimation _fadeAnimation;
 
   @override
@@ -49,7 +56,7 @@ class MainScreenState extends State<MainScreen> with SingleTickerProviderStateMi
     this._fadeAnimation = new FadeAnimation(this);
   }
 
-  MainScreenState({Key key, @required this.employee});
+  MainScreenState({Key key, @required this.employee, @required this.isActive});
 
   Widget manyOptionsScreen() {
     return new Center(
@@ -122,6 +129,42 @@ class MainScreenState extends State<MainScreen> with SingleTickerProviderStateMi
             [30, 0, 30, 30], 25,
             15, 15, 0.15, 30,
           ),
+          new Visibility(
+            visible: employee.getPowers(),
+            child: ContainerTemplate.buildContainer(
+                new Padding(
+                  padding: EdgeInsets.only(left: 10, top: 5, bottom: 5),
+                  child: new Padding(
+                    padding: EdgeInsets.only(left: 8.0, bottom: 5.0, top: 5.0, right: 8.0),
+                    child: new ListTile(
+                      leading: new Icon(Icons.fingerprint, color: Color(this._iconLabelColor).withOpacity(0.60),),
+                      title: new Text((this.isActive? "Deactivate" : "Activate") + " the services", style: new TextStyle(
+                        color: new Color(this._iconLabelColor),
+                      ),
+                      ),
+                      trailing: Switch(
+                        value: this.isActive,
+                        onChanged: (value) async {
+                          this.isActive = value;
+                          final CollectionReference misc = FirebaseFirestore.instance.collection('miscellaneous');
+                          DialogTemplate.initLoader(context, "Please, wait for a moment...");
+                          await misc.doc("active").set({
+                            'isActive': this.isActive
+                          });
+                          DialogTemplate.terminateLoader();
+                          DialogTemplate.showMessage(context, (this.isActive? "Reactivated the services." : "Deactivated the services."));
+                          setState(() {});
+                        },
+                        activeTrackColor: new Color(this._borderoFocusColor),
+                        activeColor: new Color(this._borderColor),
+                      ),
+                    ),
+                  ),
+                ),
+                [30, 15, 30, 15],
+                10, 15, 5, 0.15, 30
+            ),
+          )
         ],
       ),
     );
