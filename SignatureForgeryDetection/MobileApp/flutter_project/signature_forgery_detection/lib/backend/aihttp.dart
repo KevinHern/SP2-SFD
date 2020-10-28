@@ -11,8 +11,41 @@ import 'package:signature_forgery_detection/models/airesponse.dart';
 
 // Backend
 import 'package:http/http.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AIHTTPRequest{
+  static Future getTrainModel(int model) async {
+    return await FirebaseFirestore.instance.runTransaction<bool>((transaction) async {
+      final CollectionReference misc = FirebaseFirestore.instance.collection('miscellaneous');
+      final doc = misc.doc("aiserver");
+      DocumentSnapshot snapshot = await transaction.get(doc);
+
+      String toSetTrain = (model == 1)? "convInTrain" : "ssInTrain";
+
+      if (snapshot.exists) {
+        return snapshot.get(toSetTrain);
+      }
+      else return false;
+    });
+  }
+
+  static Future setTrainModel(int model, bool isTraining) async {
+    await FirebaseFirestore.instance.runTransaction<int>((transaction) async {
+      final CollectionReference misc = FirebaseFirestore.instance.collection('miscellaneous');
+      final doc = misc.doc("aiserver");
+      DocumentSnapshot snapshot = await transaction.get(doc);
+
+      String toSetTrain = (model == 1)? "convInTrain" : "ssInTrain";
+
+      if (snapshot.exists) {
+        transaction.update(doc, {
+          toSetTrain: isTraining
+        });
+        return 1;
+      }
+      else return 0;
+    });
+  }
 
   static Future storeRequest(String link, String signer, String signame, File signature, bool sclient) async {
     // Making POST request

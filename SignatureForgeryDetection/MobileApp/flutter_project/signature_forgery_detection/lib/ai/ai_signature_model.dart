@@ -79,7 +79,8 @@ class AIModelClientState extends State<AIModelClient>{
 
           if(aiserver_link.isNotEmpty){
             DialogTemplate.initLoader(context, "Please, wait for a moment...");
-            this.ai_signature = await AIHTTPRequest.trainRequest(aiserver_link, 22, true, this.client.getUID());
+            int response = await AIHTTPRequest.trainRequest(aiserver_link, 22, true, this.client.getUID());
+            String msg = (response == 1)? "Request processed successfully. Training model..." : "An error ocurred. Request could not be processed";
             String clientName = this.client.getParameterByString("name") + " " + this.client.getParameterByString("lname");
             int logCode = await (new QueryLog()).pushLog(
                 0, " decided to train " + clientName + "'s Signature Model",
@@ -89,6 +90,7 @@ class AIModelClientState extends State<AIModelClient>{
                 0, "Retrained an AI Model", 0
             );
             DialogTemplate.terminateLoader();
+            DialogTemplate.showMessage(context, msg);
           }
         },
         color: new Color(0xFF002FD3),

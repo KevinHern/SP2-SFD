@@ -75,19 +75,25 @@ class AIModelState extends State<AIModel>{
           if(aiserver_link.isNotEmpty){
             int response = 0;
             DialogTemplate.initLoader(context, "Please, wait for a moment...");
-            if (model == 1) response = await AIHTTPRequest.trainRequest(aiserver_link, model, this.isClient, "");
-            else if (model == 21) response = await AIHTTPRequest.trainRequest(aiserver_link, model, this.isClient, "");
-            else response = await AIHTTPRequest.trainRequest(aiserver_link, model, this.isClient, "");
+            String msg = "";
+            bool isTraining = await AIHTTPRequest.getTrainModel(model);
+            if(!isTraining){
+              await AIHTTPRequest.setTrainModel(model, true);
+              if (model == 1) response = await AIHTTPRequest.trainRequest(aiserver_link, model, this.isClient, "");
+              else if (model == 21) response = await AIHTTPRequest.trainRequest(aiserver_link, model, this.isClient, "");
+              else response = await AIHTTPRequest.trainRequest(aiserver_link, model, this.isClient, "");
 
-            String aimodel = (model == 1)? "AI Model: Convolutional Model" : (model == 21)? " Signer Network" : "AI Model: Siamese Model";
-            String msg = (response == 1)? "Request processed successfully. Training model..." : "An error ocurred. Request could not be processed";
-            int logCode = await (new QueryLog()).pushLog(
-                0, " decided to retrain the " + aimodel,
-                this.employee.getParameterByString("name") + " " + this.employee.getParameterByString("lname"),
-                '',
-                this.employee.getUID(),
-                0, "Retrained an AI Model", 0
-            );
+              String aimodel = (model == 1)? "AI Model: Convolutional Model" : (model == 21)? " Signer Network" : "AI Model: Siamese Model";
+              msg = (response == 1)? "Request processed successfully. Training model..." : "An error ocurred. Request could not be processed";
+              int logCode = await (new QueryLog()).pushLog(
+                  0, " decided to retrain the " + aimodel,
+                  this.employee.getParameterByString("name") + " " + this.employee.getParameterByString("lname"),
+                  '',
+                  this.employee.getUID(),
+                  0, "Retrained an AI Model", 0
+              );
+            }
+            else msg = "Model is training. Fetch to check if it completed the training procedure.";
             DialogTemplate.terminateLoader();
             DialogTemplate.showMessage(context, msg);
           }
@@ -128,8 +134,14 @@ class AIModelState extends State<AIModel>{
               else this.ai_sms = await AIHTTPRequest.modelRequest(aiserver_link, model, "", this.isClient);
               DialogTemplate.terminateLoader();
 
-              if(model == 1 && this.ai_conv != null) this.showConvolutional = true;
-              else if(model == 21 && this.ai_ss != null) this.showSignerSignature = true;
+              if(model == 1 && this.ai_conv != null) {
+                await AIHTTPRequest.setTrainModel(model, false);
+                this.showConvolutional = true;
+              }
+              else if(model == 21 && this.ai_ss != null) {
+                await AIHTTPRequest.setTrainModel(model, false);
+                this.showSignerSignature = true;
+              }
               else if(model == 3 && this.ai_sms != null) this.showSiamese = true;
               else {
                 DialogTemplate.showMessage(context, "The model you requested does not exist.");

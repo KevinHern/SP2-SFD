@@ -146,10 +146,19 @@ class MainScreenState extends State<MainScreen> with SingleTickerProviderStateMi
                         value: this.isActive,
                         onChanged: (value) async {
                           this.isActive = value;
-                          final CollectionReference misc = FirebaseFirestore.instance.collection('miscellaneous');
                           DialogTemplate.initLoader(context, "Please, wait for a moment...");
-                          await misc.doc("active").set({
-                            'isActive': this.isActive
+
+                          await FirebaseFirestore.instance.runTransaction<int>((transaction) async {
+                            final CollectionReference misc = FirebaseFirestore.instance.collection('miscellaneous');
+                            final doc = misc.doc("active");
+                            DocumentSnapshot snapshot = await transaction.get(doc);
+
+                            if (snapshot.exists) {
+                              transaction.update(doc, {
+                                'isActive': this.isActive
+                              });
+                            }
+                            return 0;
                           });
                           DialogTemplate.terminateLoader();
                           DialogTemplate.showMessage(context, (this.isActive? "Reactivated the services." : "Deactivated the services."));

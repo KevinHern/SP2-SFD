@@ -162,6 +162,7 @@ class RegisterEmployeeState extends State<RegisterEmployee> {
                 'init': _scheduleInit.text,
                 'end': _scheduleEnd.text,
                 'powers': this._hasPowers,
+                'ssInTrain': false,
               });
 
               /*
