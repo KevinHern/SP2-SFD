@@ -137,7 +137,7 @@ class MainScreenState extends State<MainScreen> with SingleTickerProviderStateMi
                   child: new Padding(
                     padding: EdgeInsets.only(left: 8.0, bottom: 5.0, top: 5.0, right: 8.0),
                     child: new ListTile(
-                      leading: new Icon(Icons.fingerprint, color: Color(this._iconLabelColor).withOpacity(0.60),),
+                      leading: new Icon(Icons.add_to_home_screen, color: Color(this._iconLabelColor).withOpacity(0.60),),
                       title: new Text((this.isActive? "Deactivate" : "Activate") + " the services", style: new TextStyle(
                         color: new Color(this._iconLabelColor),
                       ),

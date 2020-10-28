@@ -73,12 +73,14 @@ class AIModelState extends State<AIModel>{
           });
 
           if(aiserver_link.isNotEmpty){
+            int response = 0;
             DialogTemplate.initLoader(context, "Please, wait for a moment...");
-            if (model == 1) this.ai_conv = await AIHTTPRequest.trainRequest(aiserver_link, model, this.isClient, "");
-            else if (model == 21) this.ai_ss = await AIHTTPRequest.trainRequest(aiserver_link, model, this.isClient, "");
-            else this.ai_sms = await AIHTTPRequest.trainRequest(aiserver_link, model, this.isClient, "");
+            if (model == 1) response = await AIHTTPRequest.trainRequest(aiserver_link, model, this.isClient, "");
+            else if (model == 21) response = await AIHTTPRequest.trainRequest(aiserver_link, model, this.isClient, "");
+            else response = await AIHTTPRequest.trainRequest(aiserver_link, model, this.isClient, "");
 
             String aimodel = (model == 1)? "AI Model: Convolutional Model" : (model == 21)? " Signer Network" : "AI Model: Siamese Model";
+            String msg = (response == 1)? "Request processed successfully. Training model..." : "An error ocurred. Request could not be processed";
             int logCode = await (new QueryLog()).pushLog(
                 0, " decided to retrain the " + aimodel,
                 this.employee.getParameterByString("name") + " " + this.employee.getParameterByString("lname"),
@@ -87,6 +89,7 @@ class AIModelState extends State<AIModel>{
                 0, "Retrained an AI Model", 0
             );
             DialogTemplate.terminateLoader();
+            DialogTemplate.showMessage(context, msg);
           }
         },
         color: new Color(0xFF002FD3),
@@ -175,10 +178,10 @@ class AIModelState extends State<AIModel>{
                 ((this.ai_sms == null)? new Text("") : new Text(this.ai_sms.getModelSigners())),
               ),
               new Divider(color: new Color(0x000000).withOpacity(0.15), thickness: 1,),
-              this._buildTrainButton(model),
             ],
           ),
         ),
+        this._buildTrainButton(model),
       ],
     );
   }

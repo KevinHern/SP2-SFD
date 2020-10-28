@@ -129,7 +129,7 @@ class AIHTTPRequest{
       return 1;
     }
     else {
-      return null;
+      return 0;
     }
   }
 
