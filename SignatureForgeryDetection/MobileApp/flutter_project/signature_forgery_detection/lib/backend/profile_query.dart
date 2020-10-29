@@ -20,6 +20,7 @@ class QueryProfile {
               'email': newValues[0]
             });
             employee.updateByString("email", newValues[0]);
+            (employee.getUser() as User).sendEmailVerification();
             break;
           case 1:
             await (employee.getUser() as User).updatePassword(newValues[0]);
